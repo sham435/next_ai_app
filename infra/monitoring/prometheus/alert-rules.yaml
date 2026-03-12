@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alert-rules
+  namespace: monitoring
+data:
+  scrape-alerts.yaml: |
+    groups:
+      - name: scrape-platform-alerts
+        rules:
+          # High error rate on API
+          - alert: HighAPIErrorRate
+            expr: rate(http_requests_total{job="scrape-api",status=~"5.."}[5m]) > 0.05
+            for: 2m
+            labels:
+              severity: critical
+              service: scrape-api
+            annotations:
+              summary: "High API error rate detected"
+              description: "API error rate is {{ $value | humanizePercentage }} (>5%) for 2 minutes"
+
+          # API latency too high
+          - alert: HighAPILatency
+            expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="scrape-api"}[5m])) > 2
+            for: 5m
+            labels:
+              severity: warning
+              service: scrape-api
+            annotations:
+              summary: "High API latency detected"
+              description: "API P95 latency is {{ $value }}s (>2s) for 5 minutes"
+
+          # Worker queue depth too high
+          - alert: HighQueueDepth
+            expr: scrape_queue_waiting > 100
+            for: 5m
+            labels:
+              severity: warning
+              service: scrape-worker
+            annotations:
+              summary: "Scrape queue depth is high"
+              description: "{{ $value }} jobs waiting in queue for 5 minutes"
+
+          # Worker job failure rate
+          - alert: HighJobFailureRate
+            expr: rate(scrape_jobs_failed_total[5m]) / rate(scrape_jobs_total[5m]) > 0.1
+            for: 5m
+            labels:
+              severity: critical
+              service: scrape-worker
+            annotations:
+              summary: "High job failure rate"
+              description: "Job failure rate is {{ $value | humanizePercentage }} (>10%)"
+
+          # Redis down
+          - alert: RedisDown
+            expr: redis_up == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: redis
+            annotations:
+              summary: "Redis is down"
+              description: "Redis has been unreachable for 1 minute"
+
+          # Redis memory usage high
+          - alert: RedisHighMemory
+            expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+            for: 5m
+            labels:
+              severity: warning
+              service: redis
+            annotations:
+              summary: "Redis memory usage high"
+              description: "Redis is using {{ $value | humanizePercentage }} of available memory"
+
+          # Pod restart loop
+          - alert: PodRestartLoop
+            expr: rate(kube_pod_container_status_restarts_total{namespace="scrape-system"}[15m]) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Pod restart loop detected"
+              description: "Pod {{ $labels.pod }} is restarting frequently"
+
+          # CPU throttling
+          - alert: CPUThrottlingHigh
+            expr: rate(container_cpu_cfs_throttled_seconds_total{namespace="scrape-system"}[5m]) > 0.25
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "CPU throttling detected"
+              description: "Container {{ $labels.container }} in {{ $labels.pod }} is being CPU throttled"

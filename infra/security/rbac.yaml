@@ -1,0 +1,55 @@
+# API Service Account - minimal permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: scrape-api-role
+  namespace: scrape-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: scrape-api-rolebinding
+  namespace: scrape-system
+subjects:
+  - kind: ServiceAccount
+    name: scrape-api-sa
+    namespace: scrape-system
+roleRef:
+  kind: Role
+  name: scrape-api-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Worker Service Account - minimal permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: scrape-worker-role
+  namespace: scrape-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: scrape-worker-rolebinding
+  namespace: scrape-system
+subjects:
+  - kind: ServiceAccount
+    name: scrape-worker-sa
+    namespace: scrape-system
+roleRef:
+  kind: Role
+  name: scrape-worker-role
+  apiGroup: rbac.authorization.k8s.io

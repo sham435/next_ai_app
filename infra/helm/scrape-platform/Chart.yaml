@@ -1,0 +1,13 @@
+apiVersion: v2
+name: scrape-platform
+description: Enterprise scraping platform with Next.js frontend, NestJS API, and BullMQ workers
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - scraping
+  - nextjs
+  - nestjs
+  - bullmq
+maintainers:
+  - name: scrape-platform-team

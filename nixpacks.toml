@@ -1,0 +1,12 @@
+[build]
+exclude = "node_modules/"
+
+[build.docker]
+file = "Dockerfile"
+
+[nodejs]
+version = "20"
+
+[nixpacks.env]
+NEXT_TELEMETRY_DISABLED = "1"
+NODE_ENV = "production"

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scrape-worker
+  namespace: scrape-system
+  labels:
+    app: scrape-worker
+    app.kubernetes.io/part-of: scrape-platform
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: scrape-worker
+  template:
+    metadata:
+      labels:
+        app: scrape-worker
+    spec:
+      serviceAccountName: scrape-worker-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: worker
+          image: scrape-worker:latest
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: scrape-secrets
+                  key: redis-password
+            - name: WORKER_CONCURRENCY
+              value: "5"
+            - name: RATE_LIMIT_MAX
+              value: "50"
+            - name: RATE_LIMIT_DURATION
+              value: "60000"
+            - name: DOWNLOAD_DIR
+              value: "/app/download"
+            - name: REQUEST_TIMEOUT
+              value: "10000"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          volumeMounts:
+            - name: download-volume
+              mountPath: /app/download
+      volumes:
+        - name: download-volume
+          persistentVolumeClaim:
+            claimName: download-pvc
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: scrape-worker-sa
+  namespace: scrape-system

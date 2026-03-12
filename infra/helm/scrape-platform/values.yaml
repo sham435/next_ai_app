@@ -1,0 +1,122 @@
+# Global configuration
+global:
+  namespace: scrape-system
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# Redis
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: 7-alpine
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 5Gi
+  password: ""  # Set via --set or secrets
+
+# API Service (NestJS)
+api:
+  replicas: 2
+  image:
+    repository: scrape-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 4000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPU: 70
+    targetMemory: 80
+  env:
+    requestTimeout: "10000"
+    downloadDir: "/app/download"
+  downloadVolume:
+    enabled: true
+    size: 10Gi
+
+# Worker Service (BullMQ)
+worker:
+  replicas: 3
+  image:
+    repository: scrape-worker
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 20
+    targetCPU: 70
+  concurrency: 5
+  rateLimit:
+    max: 50
+    duration: 60000
+
+# Web Frontend (Next.js)
+web:
+  replicas: 2
+  image:
+    repository: scrape-web
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 3000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPU: 70
+
+# Ingress
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "60"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    web: scrape.example.com
+    api: api.scrape.example.com
+  tls:
+    enabled: true
+    secretName: scrape-tls
+
+# Network Policies
+networkPolicies:
+  enabled: true
+
+# Monitoring
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+    interval: 15s

@@ -1,0 +1,35 @@
+# KEDA ScaledObject for queue-based autoscaling
+# Requires: KEDA operator installed in cluster
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: scrape-worker-keda
+  namespace: scrape-system
+spec:
+  scaleTargetRef:
+    name: scrape-worker
+  pollingInterval: 15
+  cooldownPeriod: 60
+  minReplicaCount: 2
+  maxReplicaCount: 20
+  triggers:
+    - type: redis
+      metadata:
+        address: redis.scrape-system.svc.cluster.local:6379
+        passwordFromEnv: REDIS_PASSWORD
+        listName: bull:scrape:wait
+        listLength: "10"
+        enableTLS: "false"
+      authenticationRef:
+        name: scrape-redis-auth
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: scrape-redis-auth
+  namespace: scrape-system
+spec:
+  secretTargetRef:
+    - parameter: password
+      name: scrape-secrets
+      key: redis-password

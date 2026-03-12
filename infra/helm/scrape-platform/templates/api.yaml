@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "scrape-platform.fullname" . }}-api
+  labels:
+    app: scrape-api
+    {{- include "scrape-platform.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app: scrape-api
+  template:
+    metadata:
+      labels:
+        app: scrape-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.api.port }}"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: api
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.api.port }}
+          env:
+            - name: PORT
+              value: "{{ .Values.api.port }}"
+            - name: NODE_ENV
+              value: "production"
+            - name: REDIS_HOST
+              value: {{ include "scrape-platform.redisHost" . }}
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scrape-platform.fullname" . }}-secrets
+                  key: redis-password
+            - name: FRONTEND_URL
+              value: "https://{{ .Values.ingress.hosts.web }}"
+            - name: BULL_BOARD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scrape-platform.fullname" . }}-secrets
+                  key: bull-board-password
+            - name: DOWNLOAD_DIR
+              value: {{ .Values.api.env.downloadDir | quote }}
+            - name: REQUEST_TIMEOUT
+              value: {{ .Values.api.env.requestTimeout | quote }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.api.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.api.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "scrape-platform.fullname" . }}-api
+  labels:
+    app: scrape-api
+    {{- include "scrape-platform.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: scrape-api
+  ports:
+    - port: 80
+      targetPort: {{ .Values.api.port }}
+{{- if .Values.api.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "scrape-platform.fullname" . }}-api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "scrape-platform.fullname" . }}-api
+  minReplicas: {{ .Values.api.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.api.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.api.autoscaling.targetCPU }}
+{{- end }}

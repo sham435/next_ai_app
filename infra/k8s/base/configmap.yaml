@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scrape-config
+  namespace: scrape-system
+data:
+  frontend-url: "https://scrape.example.com"
+  api-url: "https://api.scrape.example.com"

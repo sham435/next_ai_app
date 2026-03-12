@@ -1,0 +1,42 @@
+name: Weekly Security Scan
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 6 AM UTC
+  workflow_dispatch:
+
+jobs:
+  full-security-scan:
+    name: Full Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: npm audit (all packages)
+        run: |
+          echo "=== Root ===" && npm audit || true
+          echo "=== Web ===" && cd apps/web && npm audit || true
+          echo "=== API ===" && cd ../api && npm audit || true
+          echo "=== Worker ===" && cd ../worker && npm audit || true
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: json
+          output: trivy-fs-report.json
+
+      - name: Upload scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-results
+          path: trivy-fs-report.json
+          retention-days: 90

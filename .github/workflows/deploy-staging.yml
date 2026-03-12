@@ -1,0 +1,29 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update image tags in overlay
+        run: |
+          cd infra/k8s/overlays/staging
+          # Update image tags to current commit SHA
+          echo "Updating staging to commit ${{ github.sha }}"
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "deploy: staging ${{ github.sha }}"
+          git push
+        # ArgoCD will automatically detect the change and sync

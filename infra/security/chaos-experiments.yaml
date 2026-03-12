@@ -1,0 +1,53 @@
+# LitmusChaos - Pod Delete Experiment
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: worker-pod-delete
+  namespace: scrape-system
+  annotations:
+    litmuschaos.io/chaos: "true"
+spec:
+  appinfo:
+    appns: scrape-system
+    applabel: "app=scrape-worker"
+    appkind: deployment
+  engineState: active
+  chaosServiceAccount: litmus-admin
+  experiments:
+    - name: pod-delete
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: "30"
+            - name: CHAOS_INTERVAL
+              value: "10"
+            - name: FORCE
+              value: "false"
+            - name: PODS_AFFECTED_PERC
+              value: "50"
+---
+# Network Latency Experiment
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: redis-network-latency
+  namespace: scrape-system
+spec:
+  appinfo:
+    appns: scrape-system
+    applabel: "app=redis"
+    appkind: deployment
+  engineState: active
+  chaosServiceAccount: litmus-admin
+  experiments:
+    - name: pod-network-latency
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: "60"
+            - name: NETWORK_LATENCY
+              value: "200"
+            - name: DESTINATION_IPS
+              value: ""

@@ -1,0 +1,77 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy:
+    name: Deploy to Railway
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Railway Login
+        run: railway login --token ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Link to Railway Project
+        run: railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+        continue-on-error: true
+
+      - name: Deploy API Service
+        if: success()
+        run: |
+          cd apps/api
+          railway up --service scrape-api --environment ${{ github.event.inputs.environment || 'production' }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Deploy Web Service
+        if: success()
+        run: |
+          cd apps/web
+          railway up --service scrape-web --environment ${{ github.event.inputs.environment || 'production' }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Deploy Worker Service
+        if: success()
+        run: |
+          cd apps/worker
+          railway up --service scrape-worker --environment ${{ github.event.inputs.environment || 'production' }}
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Run Database Migrations
+        if: success()
+        run: |
+          railway run --service scrape-api npm run db:migrate
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Get deployment status
+        if: always()
+        run: |
+          echo "Deployment completed with status: ${{ job.status }}"
+          railway whoami || true

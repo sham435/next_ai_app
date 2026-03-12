@@ -1,0 +1,191 @@
+openapi: 3.0.0
+info:
+  title: Scrape Platform API
+  version: 1.0.0
+  description: Enterprise web scraping platform API with job queue support
+
+servers:
+  - url: https://api.scrape-platform.com
+    description: Production
+  - url: https://staging-api.scrape-platform.com
+    description: Staging
+  - url: http://localhost:4000
+    description: Development
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns the health status of the API and its dependencies
+      tags:
+        - System
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok, degraded, down]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                  redis:
+                    type: string
+                    enum: [connected, disconnected]
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: Returns application metrics in Prometheus format
+      tags:
+        - System
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /scrape:
+    post:
+      summary: Submit scrape job
+      description: |
+        Submit a new web scraping job. Returns immediately with a job ID
+        for tracking progress via WebSocket.
+      tags:
+        - Scraping
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: HTTPS URL to scrape
+                  example: https://example.com
+                priority:
+                  type: integer
+                  enum: [1, 5, 10]
+                  default: 5
+                  description: Job priority (1=high, 5=normal, 10=low)
+      responses:
+        '201':
+          description: Job created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  jobId:
+                    type: string
+                    example: abc-123-def-456
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /scrape/{jobId}:
+    get:
+      summary: Get job status
+      description: Get the current status of a scraping job
+      tags:
+        - Scraping
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: abc-123-def-456
+      responses:
+        '200':
+          description: Job status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  url:
+                    type: string
+                  status:
+                    type: string
+                    enum: [pending, queued, fetching, parsing, downloading, completed, failed]
+                  filesFound:
+                    type: integer
+                    nullable: true
+                  filesDownloaded:
+                    type: integer
+                    nullable: true
+                  progress:
+                    type: integer
+                    description: Progress percentage 0-100
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+        message:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: System
+    description: System endpoints (health, metrics)
+  - name: Scraping
+    description: Web scraping job management

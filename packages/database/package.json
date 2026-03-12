@@ -1,0 +1,28 @@
+{
+  "name": "@scrape-platform/database",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "migration:generate": "typeorm migration:generate -d src/data-source.ts",
+    "migration:run": "typeorm migration:run -d src/data-source.ts",
+    "migration:revert": "typeorm migration:revert -d src/data-source.ts",
+    "seed": "ts-node src/seeders/index.ts",
+    "db:migrate": "ts-node src/data-source.ts"
+  },
+  "dependencies": {
+    "typeorm": "^0.3.20",
+    "pg": "^8.11.0",
+    "reflect-metadata": "^0.2.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^22.0.0"
+  }
+}

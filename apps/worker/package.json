@@ -1,0 +1,24 @@
+{
+  "name": "@scrape-platform/worker",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "bullmq": "^5.0.0",
+    "ioredis": "^5.4.0",
+    "axios": "^1.7.0",
+    "cheerio": "^1.0.0",
+    "prom-client": "^15.1.0",
+    "@scrape-platform/shared-types": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0"
+  }
+}

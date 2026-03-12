@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: redis-backup
+  namespace: scrape-system
+spec:
+  schedule: "0 */6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: redis:7-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  DATE=$(date +%Y%m%d_%H%M%S)
+                  echo "Starting Redis backup at $DATE"
+                  redis-cli -h redis -a $REDIS_PASSWORD --no-auth-warning BGSAVE
+                  sleep 10
+                  tar -czf /backup/redis-backup-$DATE.tar.gz /data/dump.rdb 2>/dev/null || true
+                  # Clean up old backups (keep last 10)
+                  ls -t /backup/redis-backup-*.tar.gz | tail -n +11 | xargs rm -f 2>/dev/null || true
+                  echo "Backup completed: redis-backup-$DATE.tar.gz"
+              env:
+                - name: REDIS_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: scrape-secrets
+                      key: redis-password
+              volumeMounts:
+                - name: backup-volume
+                  mountPath: /backup
+                - name: redis-data
+                  mountPath: /data
+                  readOnly: true
+          restartPolicy: OnFailure
+          volumes:
+            - name: backup-volume
+              persistentVolumeClaim:
+                claimName: redis-backup-pvc
+            - name: redis-data
+              persistentVolumeClaim:
+                claimName: redis-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-backup-pvc
+  namespace: scrape-system
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

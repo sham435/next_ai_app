@@ -1,0 +1,35 @@
+# ApplicationSet for multi-cluster deployment
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: scrape-platform-multi-cluster
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - cluster: production-us
+            url: https://kubernetes.default.svc
+            overlay: production
+            revision: main
+          - cluster: staging
+            url: https://kubernetes.default.svc
+            overlay: staging
+            revision: develop
+  template:
+    metadata:
+      name: 'scrape-platform-{{cluster}}'
+      namespace: argocd
+    spec:
+      project: scrape-platform
+      source:
+        repoURL: https://github.com/your-org/next_chat_bot.git
+        targetRevision: '{{revision}}'
+        path: 'infra/k8s/overlays/{{overlay}}'
+      destination:
+        server: '{{url}}'
+        namespace: scrape-system
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
