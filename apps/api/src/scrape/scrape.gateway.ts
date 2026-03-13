@@ -17,7 +17,7 @@ import type { ScrapeResponse } from '@scrape-platform/shared-types';
     origin: process.env.FRONTEND_URL?.split(',') ?? ['http://localhost:3000', 'https://web-production-b5dcf.up.railway.app'],
     credentials: true,
   },
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],
   pingTimeout: 60000,
   pingInterval: 25000,
 })
