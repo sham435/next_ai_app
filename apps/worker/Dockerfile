@@ -1,26 +1,32 @@
+FROM node:20-alpine AS deps
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+COPY apps/worker/package.json ./apps/worker/
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY tsconfig.base.json ./
+
+RUN npm install
+
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY tsconfig.base.json ./
-COPY apps/worker ./apps/worker/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/shared-types/tsconfig.json ./packages/shared-types/
 COPY packages/shared-types/src ./packages/shared-types/src
+COPY apps/worker ./apps/worker/
 
-RUN npm install
-
+# Build shared-types
 WORKDIR /app/packages/shared-types
 RUN npx tsc
 
-RUN mkdir -p ../node_modules/@scrape-platform && \
-    cp -r ./dist ../node_modules/@scrape-platform/shared-types && \
-    cp ./package.json ../node_modules/@scrape-platform/shared-types/
-
+# Build worker
 WORKDIR /app/apps/worker
-RUN npm install
-
-RUN npx tsc --skipLibCheck
+RUN npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app/apps/worker
@@ -30,10 +36,16 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
+# Copy built files - note the path
 COPY --from=builder /app/apps/worker/dist ./dist
 COPY --from=builder /app/apps/worker/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
+# Copy shared-types to node_modules
+RUN mkdir -p node_modules/@scrape-platform && \
+    cp -r /app/packages/shared-types/dist node_modules/@scrape-platform/shared-types
+
 USER nodejs
 
-CMD ["node", "dist/main.js"]
+# The file is at ./dist/index.js relative to WORKDIR
+CMD ["node", "dist/index.js"]
