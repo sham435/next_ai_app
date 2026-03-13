@@ -42,7 +42,8 @@ RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./.next/static
-COPY --from=builder /app/apps/web/public ./public
+
+RUN mkdir -p public && touch public/.gitkeep || true
 
 USER nextjs
 
