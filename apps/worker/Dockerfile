@@ -8,7 +8,7 @@ COPY packages/shared-types ./packages/shared-types/
 
 WORKDIR /app/apps/worker
 
-RUN npm ci
+RUN npm install
 
 RUN mkdir -p node_modules/@scrape-platform && \
     cp -r ./packages/shared-types node_modules/@scrape-platform/shared-types
