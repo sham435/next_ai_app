@@ -1,0 +1,11 @@
+{
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "apps/scraper-service/Dockerfile"
+  },
+  "deploy": {
+    "startCommand": "uvicorn main:app --host 0.0.0.0 --port $PORT",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 30
+  }
+}
