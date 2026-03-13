@@ -17,6 +17,7 @@ COPY package.json package-lock.json ./
 COPY tsconfig.base.json ./
 COPY packages/shared-types/tsconfig.json ./packages/shared-types/
 COPY packages/shared-types/src ./packages/shared-types/src
+COPY packages/shared-types/package.json ./packages/shared-types/
 COPY apps/api ./apps/api/
 
 WORKDIR /app/packages/shared-types
