@@ -21,11 +21,7 @@ const worker = new Worker('scrape', processJob, {
   concurrency: CONCURRENCY,
   limiter: {
     max: Number(process.env.RATE_LIMIT_MAX) || 50,
-    duration: Number(process.env.RATE_LIMIT_DURATION) || 60000, // 50 jobs per minute
-  },
-  settings: {
-    stalledInterval: 30000,
-    maxStalledCount: 2,
+    duration: Number(process.env.RATE_LIMIT_DURATION) || 60000,
   },
 });
 
