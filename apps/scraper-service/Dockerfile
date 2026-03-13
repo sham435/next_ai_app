@@ -11,4 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --log-level info
+ENV PORT=8000
+
+CMD ["python", "-c", "import os; import uvicorn; from main import app; uvicorn.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8000)))"]
