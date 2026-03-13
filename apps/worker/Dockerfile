@@ -1,17 +1,6 @@
-FROM node:20-alpine AS deps
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-COPY apps/worker/package.json ./apps/worker/
-COPY packages/shared-types/package.json ./packages/shared-types/
-COPY tsconfig.base.json ./
-
-RUN npm ci
-
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY tsconfig.base.json ./
 COPY apps/worker ./apps/worker/
@@ -19,8 +8,10 @@ COPY packages/shared-types ./packages/shared-types/
 
 WORKDIR /app/apps/worker
 
+RUN npm ci
+
 RUN mkdir -p node_modules/@scrape-platform && \
-    cp -r ../packages/shared-types node_modules/@scrape-platform/shared-types
+    cp -r ./packages/shared-types node_modules/@scrape-platform/shared-types
 
 RUN npx tsc --skipLibCheck
 
