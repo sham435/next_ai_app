@@ -20,10 +20,10 @@ COPY packages/shared-types/src ./packages/shared-types/src
 COPY apps/worker ./apps/worker/
 
 WORKDIR /app/packages/shared-types
-RUN npm run build
+RUN npx tsc
 
 WORKDIR /app/apps/worker
-RUN npm run build
+RUN npx tsc
 
 FROM node:20-alpine AS runner
 WORKDIR /app/apps/worker
@@ -36,7 +36,6 @@ RUN adduser --system --uid 1001 nodejs
 COPY --from=builder /app/apps/worker/dist ./dist
 COPY --from=builder /app/apps/worker/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/shared-types/dist ./node_modules/@scrape-platform/shared-types
 
 USER nodejs
 

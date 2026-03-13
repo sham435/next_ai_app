@@ -20,10 +20,10 @@ COPY packages/shared-types/src ./packages/shared-types/src
 COPY apps/api ./apps/api/
 
 WORKDIR /app/packages/shared-types
-RUN npm run build
+RUN npx tsc
 
 WORKDIR /app/apps/api
-RUN npm run build
+RUN npx tsc
 
 FROM node:20-alpine AS runner
 WORKDIR /app/apps/api
