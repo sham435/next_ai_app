@@ -41,32 +41,25 @@ jobs:
 
       - name: Deploy API Service
         if: success()
-        run: |
-          cd apps/api
-          railway up --service scrape-api --environment ${{ github.event.inputs.environment || 'production' }}
+        run: railway up --service api
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Deploy Web Service
         if: success()
-        run: |
-          cd apps/web
-          railway up --service scrape-web --environment ${{ github.event.inputs.environment || 'production' }}
+        run: railway up --service web
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Deploy Worker Service
         if: success()
-        run: |
-          cd apps/worker
-          railway up --service scrape-worker --environment ${{ github.event.inputs.environment || 'production' }}
+        run: railway up --service worker
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Run Database Migrations
         if: success()
-        run: |
-          railway run --service scrape-api npm run db:migrate
+        run: railway run --service api npm run db:migrate
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
