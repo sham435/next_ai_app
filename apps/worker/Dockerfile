@@ -41,9 +41,9 @@ COPY --from=builder /app/apps/worker/dist ./dist
 COPY --from=builder /app/apps/worker/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
-# Copy shared-types to node_modules
-RUN mkdir -p node_modules/@scrape-platform && \
-    cp -r /app/packages/shared-types/dist node_modules/@scrape-platform/shared-types
+# Copy shared-types from builder stage
+COPY --from=builder /app/packages/shared-types/dist ./node_modules/@scrape-platform/shared-types
+COPY --from=builder /app/packages/shared-types/package.json ./node_modules/@scrape-platform/shared-types/
 
 USER nodejs
 
