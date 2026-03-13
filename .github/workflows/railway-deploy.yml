@@ -31,21 +31,17 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Set Railway token
-        run: railway token ${{ secrets.RAILWAY_TOKEN }}
-
-      - name: Link to Railway Project
-        run: railway link ${{ secrets.RAILWAY_PROJECT_ID }}
-        continue-on-error: true
-
       - name: Deploy API Service
-        if: success()
-        run: railway up --service api
+        run: |
+          export RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}
+          railway up --service api
 
       - name: Deploy Web Service
-        if: success()
-        run: railway up --service web
+        run: |
+          export RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}
+          railway up --service web
 
       - name: Deploy Worker Service
-        if: success()
-        run: railway up --service worker
+        run: |
+          export RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}
+          railway up --service worker
