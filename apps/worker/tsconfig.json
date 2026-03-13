@@ -5,7 +5,10 @@
     "rootDir": "./src",
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "ES2021"
+    "target": "ES2021",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
