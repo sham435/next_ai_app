@@ -10,8 +10,14 @@ WORKDIR /app/apps/worker
 
 RUN npm install
 
+WORKDIR /app/packages/shared-types
+RUN npx tsc
+
+WORKDIR /app/apps/worker
+
 RUN mkdir -p node_modules/@scrape-platform && \
-    cp -r ./packages/shared-types node_modules/@scrape-platform/shared-types
+    cp -r ../packages/shared-types/dist node_modules/@scrape-platform/shared-types && \
+    cp ../packages/shared-types/package.json node_modules/@scrape-platform/shared-types/
 
 RUN npx tsc --skipLibCheck
 
