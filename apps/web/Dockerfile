@@ -4,12 +4,12 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/
 
-RUN npm install
+RUN npm ci
 
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY apps/web ./apps/web/
+COPY . .
 
 WORKDIR /app/apps/web
 RUN npm run build

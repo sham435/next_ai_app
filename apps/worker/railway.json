@@ -4,6 +4,6 @@
     "dockerfilePath": "apps/worker/Dockerfile"
   },
   "deploy": {
-    "healthcheckTimeout": 30
+    "startCommand": "node dist/main.js"
   }
 }
