@@ -17,11 +17,3 @@ jobs:
         run: |
           cd infra/k8s/overlays/production
           echo "Updating production to commit ${{ github.sha }}"
-
-      - name: Commit and push changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet || git commit -m "deploy: production ${{ github.sha }}"
-          git push
