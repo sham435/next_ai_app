@@ -8,5 +8,5 @@ export class ScrapeDto {
     },
     { message: 'Only HTTPS URLs are allowed' },
   )
-  url: string;
+  url!: string;
 }

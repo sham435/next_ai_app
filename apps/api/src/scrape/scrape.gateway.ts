@@ -22,7 +22,7 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(ScrapeGateway.name);
 
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   constructor(private readonly scrapeService: ScrapeService) {}
 

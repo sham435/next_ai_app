@@ -3,7 +3,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
-import * as basicAuth from 'express-basic-auth';
+import basicAuth from 'express-basic-auth';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 function validateEnvironment() {
