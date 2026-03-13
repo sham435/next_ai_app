@@ -23,25 +23,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
       - name: Deploy API Service
-        run: |
-          export RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}
-          railway up --service api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service api
 
       - name: Deploy Web Service
-        run: |
-          export RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}
-          railway up --service web
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service web
 
       - name: Deploy Worker Service
-        run: |
-          export RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}
-          railway up --service worker
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service worker
