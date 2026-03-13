@@ -4,6 +4,6 @@
     "dockerfilePath": "apps/worker/Dockerfile"
   },
   "deploy": {
-    "startCommand": "node dist/main.js"
+    "startCommand": "node /app/apps/worker/dist/main.js"
   }
 }
