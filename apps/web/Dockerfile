@@ -19,6 +19,8 @@ COPY packages/shared-types/tsconfig.json ./packages/shared-types/
 COPY packages/shared-types/src ./packages/shared-types/src
 COPY apps/web ./apps/web/
 
+RUN npm install
+
 WORKDIR /app/packages/shared-types
 RUN npx tsc
 
