@@ -51,7 +51,7 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL?.split(',') ?? ['http://localhost:3000'],
+    origin: process.env.FRONTEND_URL?.split(',') ?? ['http://localhost:3000', 'https://web-production-b5dcf.up.railway.app'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'accept-language'],

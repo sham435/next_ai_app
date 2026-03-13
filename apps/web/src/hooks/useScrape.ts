@@ -60,7 +60,12 @@ export function useScrape() {
 
       try {
         const socket = io(API_URL, {
-          transports: ['websocket', 'polling'],
+          transports: ['polling', 'websocket'],
+          reconnection: true,
+          reconnectionAttempts: 5,
+          reconnectionDelay: 1000,
+          timeout: 20000,
+          withCredentials: true,
         });
         socketRef.current = socket;
 
