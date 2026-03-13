@@ -22,6 +22,9 @@ COPY apps/api ./apps/api/
 WORKDIR /app/packages/shared-types
 RUN npx tsc
 
+RUN mkdir -p ../node_modules/@scrape-platform && \
+    cp -r ./dist ../node_modules/@scrape-platform/shared-types
+
 WORKDIR /app/apps/api
 RUN npx tsc
 
