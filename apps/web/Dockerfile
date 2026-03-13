@@ -42,7 +42,7 @@ RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/apps/web/.next/standalone/apps/web ./
 COPY --from=builder /app/apps/web/.next/static ./.next/static
-COPY --from=builder /app/apps/web/.next/standalone/apps/web/node_modules ./node_modules
+COPY --from=builder /app/node_modules ./node_modules
 
 RUN mkdir -p public && touch public/.gitkeep || true
 
