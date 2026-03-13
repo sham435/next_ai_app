@@ -42,6 +42,8 @@ COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
+RUN mkdir -p /app/apps/api/download && chown -R nodejs:nodejs /app/apps/api/download
+
 USER nodejs
 
 EXPOSE 3001
