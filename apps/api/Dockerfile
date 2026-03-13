@@ -3,15 +3,13 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/
-COPY packages/shared-types/package.json ./packages/shared-types/
-COPY packages/shared-types/tsconfig.json ./packages/shared-types/
 
-RUN npm ci
+RUN npm install
 
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY apps/api ./apps/api/
 
 WORKDIR /app/apps/api
 RUN npm run build
@@ -26,6 +24,7 @@ RUN adduser --system --uid 1001 nodejs
 
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
 
 USER nodejs
 

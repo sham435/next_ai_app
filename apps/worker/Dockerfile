@@ -3,15 +3,13 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 COPY apps/worker/package.json ./apps/worker/
-COPY packages/shared-types/package.json ./packages/shared-types/
-COPY packages/shared-types/tsconfig.json ./packages/shared-types/
 
-RUN npm ci
+RUN npm install
 
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY apps/worker ./apps/worker/
 
 WORKDIR /app/apps/worker
 RUN npm run build

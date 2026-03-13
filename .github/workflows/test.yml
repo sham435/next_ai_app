@@ -16,7 +16,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       
-      - run: npm ci
+      - run: npm install
       
       - name: Typecheck shared-types
         run: cd packages/shared-types && npm run typecheck || true
@@ -61,7 +61,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       
-      - run: npm ci
+      - run: npm install
       
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
