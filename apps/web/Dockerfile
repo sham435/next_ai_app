@@ -14,7 +14,17 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY tsconfig.base.json ./
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/shared-types/tsconfig.json ./packages/shared-types/
+COPY packages/shared-types/src ./packages/shared-types/src
 COPY apps/web ./apps/web/
+
+WORKDIR /app/packages/shared-types
+RUN npx tsc
+
+RUN mkdir -p ../node_modules/@scrape-platform && \
+    cp -r ./dist ../node_modules/@scrape-platform/shared-types && \
+    cp ./package.json ../node_modules/@scrape-platform/shared-types/
 
 WORKDIR /app/apps/web
 RUN npm run build

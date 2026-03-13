@@ -4,20 +4,19 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY tsconfig.base.json ./
 COPY apps/worker ./apps/worker/
-COPY packages/shared-types ./packages/shared-types/
-
-WORKDIR /app/apps/worker
-
-RUN npm install
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/shared-types/tsconfig.json ./packages/shared-types/
+COPY packages/shared-types/src ./packages/shared-types/src
 
 WORKDIR /app/packages/shared-types
 RUN npx tsc
 
-WORKDIR /app/apps/worker
+RUN mkdir -p ../node_modules/@scrape-platform && \
+    cp -r ./dist ../node_modules/@scrape-platform/shared-types && \
+    cp ./package.json ../node_modules/@scrape-platform/shared-types/
 
-RUN mkdir -p node_modules/@scrape-platform && \
-    cp -r ../packages/shared-types/dist node_modules/@scrape-platform/shared-types && \
-    cp ../packages/shared-types/package.json node_modules/@scrape-platform/shared-types/
+WORKDIR /app/apps/worker
+RUN npm install
 
 RUN npx tsc --skipLibCheck
 
