@@ -53,7 +53,7 @@ export class ScrapeController {
     }
   }
 
-  @Get('list/:url*')
+  @Get('list/:url(.*)')
   async listFiles(@Param('url') url: string) {
     try {
       const scraperUrl = process.env.SCRAPER_SERVICE_URL || 'https://scraper-production.up.railway.app';
