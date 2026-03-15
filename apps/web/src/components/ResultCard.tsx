@@ -1,7 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import type { ScrapeCompleteEvent } from '@scrape-platform/shared-types';
+
+interface ScrapeCompleteEvent {
+  jobId: string;
+  url: string;
+  success: boolean;
+  filesFound: number;
+  location: string;
+  duration: number;
+  error?: string;
+}
 
 export function ResultCard({ result }: { result: ScrapeCompleteEvent }) {
   const [downloading, setDownloading] = useState(false);
@@ -37,7 +46,9 @@ export function ResultCard({ result }: { result: ScrapeCompleteEvent }) {
 
   return (
     <div className="rounded-lg bg-green-900/20 border border-green-800 p-4 space-y-3">
-      <h3 className="font-medium text-green-400">✅ Scraping Complete</h3>
+      <h3 className="font-medium text-green-400">
+        Scraping Complete
+      </h3>
       <div className="grid grid-cols-2 gap-4 text-sm">
         <div>
           <p className="text-gray-500">Files Found</p>
@@ -54,7 +65,7 @@ export function ResultCard({ result }: { result: ScrapeCompleteEvent }) {
         disabled={downloading}
         className="w-full mt-2 py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
       >
-        {downloading ? '⏳ Downloading ZIP...' : '📥 Download ZIP'}
+        {downloading ? 'Downloading ZIP...' : 'Download ZIP'}
       </button>
     </div>
   );
