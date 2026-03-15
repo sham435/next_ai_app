@@ -18,4 +18,4 @@ WORKDIR /app
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "cd apps/web && npm run start"]
+CMD ["node", "apps/web/node_modules/next/dist/bin/next", "start"]
