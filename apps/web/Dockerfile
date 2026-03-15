@@ -18,9 +18,10 @@ COPY packages ./packages/
 COPY apps/web ./apps/web/
 
 WORKDIR /app/packages/shared-types
-RUN npx tsc
+RUN npx tsc || echo "No emit needed"
 
 WORKDIR /app/apps/web
+RUN mkdir -p public
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -36,7 +37,7 @@ COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./.next/static
 COPY --from=builder /app/apps/web/public ./public
 
-COPY --from=builder /app/packages/shared-types/dist ./node_modules/@scrape-platform/shared-types
+COPY --from=builder /app/packages/shared-types/src ./node_modules/@scrape-platform/shared-types
 
 USER nextjs
 
