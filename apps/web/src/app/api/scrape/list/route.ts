@@ -12,7 +12,7 @@ export async function GET(request: Request) {
       );
     }
     
-    const apiUrl = process.env.API_URL || 'https://api.up.railway.app';
+    const apiUrl = process.env.API_URL || 'https://api-production-171d.up.railway.app';
     
     const response = await fetch(`${apiUrl}/scrape/list/${encodeURIComponent(url)}`);
     
