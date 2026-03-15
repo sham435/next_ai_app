@@ -18,11 +18,9 @@ COPY packages ./packages/
 COPY apps/web ./apps/web/
 
 WORKDIR /app/packages/shared-types
-RUN npm ci
 RUN npx tsc
 
 WORKDIR /app/apps/web
-COPY --from=/app/packages/shared-types ./node_modules/@scrape-platform/shared-types ./node_modules/@scrape-platform/shared-types
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -37,6 +35,8 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./.next/static
 COPY --from=builder /app/apps/web/public ./public
+
+COPY --from=builder /app/packages/shared-types/dist ./node_modules/@scrape-platform/shared-types
 
 USER nextjs
 
