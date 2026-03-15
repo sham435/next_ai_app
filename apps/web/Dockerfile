@@ -33,30 +33,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/apps/web/.next/standalone ./ 
+COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./.next/static
 COPY --from=builder /app/apps/web/public ./public
 COPY --from=builder /app/packages/shared-types/src ./node_modules/@scrape-platform/shared-types
 
-RUN echo '#!/bin/sh\n\
-echo "Files in /app:"\n\
-ls -la /app\n\
-echo ""\n\
-echo "Files in /app/apps:"\n\
-ls -la /app/apps 2>/dev/null || echo "No /app/apps"\n\
-echo ""\n\
-echo "Looking for server.js:"\n\
-find /app -name server.js -type f\n\
-if [ -f "/app/server.js" ]; then\n\
-  echo "Found at /app/server.js"\n\
-  exec node /app/server.js\n\
-elif [ -f "/app/apps/web/server.js" ]; then\n\
-  echo "Found at /app/apps/web/server.js"\n\
-  cd /app/apps/web && exec node server.js\n\
-else\n\
-  echo "ERROR: server.js not found!"\n\
-  exit 1\n\
-fi' > /entrypoint.sh && chmod +x /entrypoint.sh
+RUN ls -la /app && ls -la /app/apps/web || true
 
 USER nextjs
 
@@ -64,4 +46,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["node", "apps/web/server.js"]
