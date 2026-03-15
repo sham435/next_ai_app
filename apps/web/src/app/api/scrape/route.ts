@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import { Agent } from 'https';
+
+const httpsAgent = new Agent({
+  rejectUnauthorized: false,
+});
 
 export async function POST(request: Request) {
   try {
@@ -27,6 +32,7 @@ export async function POST(request: Request) {
         'User-Agent': 'ScrapePlatform/1.0',
       },
       maxContentLength: 10 * 1024 * 1024,
+      httpsAgent,
     });
 
     const $ = cheerio.load(response.data);
