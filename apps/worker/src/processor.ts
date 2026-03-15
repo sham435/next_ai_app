@@ -6,7 +6,7 @@ import * as path from 'path';
 import { logger } from './logger';
 import type { ScrapeJobData } from '@scrape-platform/shared-types';
 
-const DOWNLOAD_DIR = path.resolve(process.env.DOWNLOAD_DIR || './download');
+const DOWNLOAD_DIR = path.resolve(process.env.DOWNLOAD_DIR || '/tmp/scraper-downloads');
 const REQUEST_TIMEOUT = Number(process.env.REQUEST_TIMEOUT) || 10000;
 const MAX_CONTENT_LENGTH = 10 * 1024 * 1024; // 10MB
 
