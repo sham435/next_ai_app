@@ -53,9 +53,10 @@ export class ScrapeController {
     }
   }
 
-  @Get('list/:url(.*)')
-  async listFiles(@Param('url') url: string) {
+  @Get('list/*path')
+  async listFiles(@Param('path') path: string) {
     try {
+      const url = decodeURIComponent(path);
       const scraperUrl = process.env.SCRAPER_SERVICE_URL || 'https://scraper-production.up.railway.app';
       
       const response = await fetch(`${scraperUrl}/files/${encodeURIComponent(url)}`);
