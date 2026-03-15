@@ -1,11 +1,4 @@
 import { NextResponse } from 'next/server';
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import { Agent } from 'https';
-
-const httpsAgent = new Agent({
-  rejectUnauthorized: false,
-});
 
 export async function POST(request: Request) {
   try {
@@ -26,61 +19,46 @@ export async function POST(request: Request) {
       );
     }
 
-    const response = await axios.get(url, {
-      timeout: 30000,
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'User-Agent': 'ScrapePlatform/1.0',
       },
-      maxContentLength: 10 * 1024 * 1024,
-      httpsAgent,
     });
 
-    const $ = cheerio.load(response.data);
+    const html = await response.text();
     
-    const title = $('title').text() || $('h1').first().text() || '';
-    const links: string[] = [];
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : '';
     
-    $('a[href]').each((_, el) => {
-      const href = $(el).attr('href');
-      if (href && href.startsWith('http')) {
-        links.push(href);
-      }
-    });
-
-    const images: string[] = [];
-    $('img[src]').each((_, el) => {
-      const src = $(el).attr('src');
-      if (src && src.startsWith('http')) {
-        images.push(src);
-      }
-    });
-
-    const scripts: string[] = [];
-    $('script[src]').each((_, el) => {
-      const src = $(el).attr('src');
-      if (src && src.startsWith('http')) {
-        scripts.push(src);
-      }
-    });
-
-    const styles: string[] = [];
-    $('link[rel="stylesheet"]').each((_, el) => {
-      const href = $(el).attr('href');
-      if (href && href.startsWith('http')) {
-        styles.push(href);
-      }
-    });
+    const linkMatches = html.match(/href="(https:[^"]+)"/g) || [];
+    const links = linkMatches.map(m => m.replace('href="', '').replace('"', '')).slice(0, 50);
+    
+    const imageMatches = html.match(/src="(https:[^"]+)"/g) || [];
+    const images = imageMatches.map(m => m.replace('src="', '').replace('"', '')).slice(0, 20);
+    
+    const scriptMatches = html.match(/<script[^>]+src="(https:[^"]+)"/g) || [];
+    const scripts = scriptMatches.map(m => {
+      const match = m.match(/src="(https:[^"]+)"/);
+      return match ? match[1] : null;
+    }).filter(Boolean).slice(0, 10);
+    
+    const styleMatches = html.match(/<link[^>]+href="(https:[^"]+\.css)"/g) || [];
+    const styles = styleMatches.map(m => {
+      const match = m.match(/href="(https:[^"]+\.css)"/);
+      return match ? match[1] : null;
+    }).filter(Boolean);
 
     return NextResponse.json({
       success: true,
       url,
-      title: title.trim(),
+      title,
       linksFound: links.length,
       filesFound: images.length + scripts.length + styles.length,
       resources: {
-        links: links.slice(0, 50),
-        images: images.slice(0, 20),
-        scripts: scripts.slice(0, 10),
+        links,
+        images,
+        scripts,
         styles,
       },
       status: 'completed',
