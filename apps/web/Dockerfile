@@ -14,8 +14,8 @@ RUN npm install
 WORKDIR /app/apps/web
 RUN npm run build
 
-WORKDIR /app
+WORKDIR /app/apps/web
 
 EXPOSE 3000
 
-CMD ["node", "apps/web/node_modules/next/dist/bin/next", "start"]
+CMD ["npm","run","start"]
