@@ -6,7 +6,7 @@ COPY apps/web/package.json ./apps/web/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY tsconfig.base.json ./
 
-RUN npm install
+RUN npm ci
 
 FROM node:20-alpine AS builder
 WORKDIR /app
@@ -14,19 +14,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY tsconfig.base.json ./
-COPY packages/shared-types/package.json ./packages/shared-types/
-COPY packages/shared-types/tsconfig.json ./packages/shared-types/
-COPY packages/shared-types/src ./packages/shared-types/src
+COPY packages ./packages/
 COPY apps/web ./apps/web/
-
-RUN npm install
 
 WORKDIR /app/packages/shared-types
 RUN npx tsc
-
-RUN mkdir -p ../node_modules/@scrape-platform && \
-    cp -r ./dist ../node_modules/@scrape-platform/shared-types && \
-    cp ./package.json ../node_modules/@scrape-platform/shared-types/
 
 WORKDIR /app/apps/web
 RUN npm run build
@@ -42,9 +34,9 @@ RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./.next/static
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/web/public ./public
 
-RUN mkdir -p public && touch public/.gitkeep || true
+COPY --from=builder /app/packages/shared-types/dist ./node_modules/@scrape-platform/shared-types
 
 USER nextjs
 
