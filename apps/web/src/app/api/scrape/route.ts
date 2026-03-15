@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
-import * as http from 'http';
+import * as https from 'https';
 import { URL } from 'url';
 
 function fetchUrl(urlStr: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(urlStr);
     const isHttps = parsedUrl.protocol === 'https:';
-    const module = isHttps ? require('https') : http;
     
-    const options = {
+    const options: https.RequestOptions = {
       hostname: parsedUrl.hostname,
       port: parsedUrl.port || (isHttps ? 443 : 80),
       path: parsedUrl.pathname + parsedUrl.search,
@@ -18,13 +17,14 @@ function fetchUrl(urlStr: string): Promise<string> {
         'Accept': 'text/html,application/xhtml+xml,*/*',
       },
       timeout: 30000,
-      rejectUnauthorized: false,
     };
 
-    const req = module.request(options, (res) => {
+    const module = isHttps ? https : require('http');
+    
+    const req = module.request(options, (res: any) => {
       let data = '';
-      res.on('data', (chunk) => data += chunk);
-      res.on('end', () => resolve(data));
+      res.on('data', (chunk: string) => { data += chunk; });
+      res.on('end', () => { resolve(data); });
     });
 
     req.on('error', reject);
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const extractLinks = (pattern: RegExp, base: string): string[] => {
       const matches = html.match(pattern) || [];
       const links: string[] = [];
-      matches.forEach((m: string) => {
+      matches.forEach((m) => {
         const hrefMatch = m.match(/(?:href|src)=["']([^"']+)["']/i);
         if (hrefMatch) {
           let href = hrefMatch[1];
