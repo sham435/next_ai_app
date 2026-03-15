@@ -1,29 +1,27 @@
 import { NextResponse } from 'next/server';
-import * as https from 'https';
+import * as http from 'http';
 import { URL } from 'url';
-
-const agent = new https.Agent({
-  rejectUnauthorized: false,
-});
 
 function fetchUrl(urlStr: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(urlStr);
+    const isHttps = parsedUrl.protocol === 'https:';
+    const module = isHttps ? require('https') : http;
     
     const options = {
       hostname: parsedUrl.hostname,
-      port: 443,
+      port: parsedUrl.port || (isHttps ? 443 : 80),
       path: parsedUrl.pathname + parsedUrl.search,
       method: 'GET',
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept': 'text/html,application/xhtml+xml,*/*',
       },
       timeout: 30000,
-      agent,
+      rejectUnauthorized: false,
     };
 
-    const req = https.request(options, (res) => {
+    const req = module.request(options, (res) => {
       let data = '';
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => resolve(data));
@@ -48,8 +46,8 @@ export async function POST(request: Request) {
     }
 
     const validUrl = new URL(url);
-    if (validUrl.protocol !== 'https:') {
-      return NextResponse.json({ error: 'Only HTTPS URLs are accepted' }, { status: 400 });
+    if (validUrl.protocol !== 'https:' && validUrl.protocol !== 'http:') {
+      return NextResponse.json({ error: 'Only HTTP/HTTPS URLs are accepted' }, { status: 400 });
     }
 
     const html = await fetchUrl(url);
@@ -82,7 +80,7 @@ export async function POST(request: Request) {
     const links = extractLinks(/<a[^>]+href=["'][^"']+["']/gi, baseUrl).slice(0, 50);
     const images = extractLinks(/<img[^>]+src=["'][^"']+["']/gi, baseUrl).slice(0, 30);
     const scripts = extractLinks(/<script[^>]+src=["'][^"']+["']/gi, baseUrl).slice(0, 20);
-    const styles = extractLinks(/<link[^>]+(?:href|rel=["']stylesheet["'])[^>]*>/gi, baseUrl).filter((h: string) => h.endsWith('.css')).slice(0, 20);
+    const styles = extractLinks(/<link[^>]+href=["'][^"']+\.css["'][^>]*>/gi, baseUrl).slice(0, 20);
 
     return NextResponse.json({
       success: true,
