@@ -2,11 +2,16 @@
   "name": "@scrape-platform/shared-types",
   "version": "0.0.1",
   "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "echo 'No build needed for types-only package'",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
