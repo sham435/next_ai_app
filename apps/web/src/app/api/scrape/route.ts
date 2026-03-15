@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import * as https from 'https';
 import { URL } from 'url';
 
+const agent = new https.Agent({
+  rejectUnauthorized: false,
+});
+
 function fetchUrl(urlStr: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(urlStr);
@@ -12,11 +16,11 @@ function fetchUrl(urlStr: string): Promise<string> {
       path: parsedUrl.pathname + parsedUrl.search,
       method: 'GET',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       },
       timeout: 30000,
+      agent,
     };
 
     const req = https.request(options, (res) => {
@@ -79,24 +83,14 @@ export async function POST(request: Request) {
     const images = extractLinks(/<img[^>]+src=["'][^"']+["']/gi, baseUrl).slice(0, 30);
     const scripts = extractLinks(/<script[^>]+src=["'][^"']+["']/gi, baseUrl).slice(0, 20);
     const styles = extractLinks(/<link[^>]+(?:href|rel=["']stylesheet["'])[^>]*>/gi, baseUrl).filter((h: string) => h.endsWith('.css')).slice(0, 20);
-    
-    const metaDescription = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
-    const metaAuthor = html.match(/<meta[^>]+name=["']author["'][^>]+content=["']([^"']+)["']/i);
 
     return NextResponse.json({
       success: true,
       url,
       title,
-      description: metaDescription ? metaDescription[1] : '',
-      author: metaAuthor ? metaAuthor[1] : '',
       linksFound: links.length,
       filesFound: images.length + scripts.length + styles.length,
-      resources: {
-        links,
-        images,
-        scripts,
-        styles,
-      },
+      resources: { links, images, scripts, styles },
       status: 'completed',
     });
   } catch (error) {
