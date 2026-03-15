@@ -1,13 +1,20 @@
 import os
 import sys
 import logging
-from fastapi import FastAPI, HTTPException
+import zipfile
+import io
+import time
+import tempfile
+import shutil
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
 import requests
 from bs4 import BeautifulSoup
-import time
 
 logging.basicConfig(
     level=logging.INFO,
@@ -117,9 +124,113 @@ async def root():
         "endpoints": {
             "health": "/health",
             "ping": "/ping",
-            "scrape": "/scrape (POST)"
+            "scrape": "/scrape (POST)",
+            "scrape-and-zip": "/scrape-and-zip (POST)",
+            "files": "/files/{url} (GET)"
         }
     }
+
+
+@app.post("/scrape-and-zip")
+async def scrape_and_zip(request: ScrapeRequest):
+    try:
+        logger.info(f"Scraping and zipping: {request.url}")
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            response = requests.get(request.url, headers=headers, timeout=30)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            html_path = os.path.join(temp_dir, "index.html")
+            with open(html_path, 'w', encoding='utf-8') as f:
+                f.write(soup.prettify())
+            
+            files_found = 0
+            for tag in soup.find_all(['link', 'script', 'img', 'a']):
+                src = tag.get('src') or tag.get('href')
+                if src and not src.startswith(('http://', 'https://')):
+                    if src.startswith('//'):
+                        full_url = f"https:{src}"
+                    elif src.startswith('/'):
+                        base_url = '/'.join(request.url.split('/')[:3])
+                        full_url = f"{base_url}{src}"
+                    else:
+                        base_url = request.url.rstrip('/')
+                        full_url = f"{base_url}/{src.lstrip('/')}"
+                    
+                    try:
+                        file_response = requests.get(full_url, headers=headers, timeout=10)
+                        if file_response.status_code == 200:
+                            file_name = src.split('/')[-1] or 'file.bin'
+                            subdir = os.path.dirname(src.lstrip('/'))
+                            if subdir:
+                                os.makedirs(os.path.join(temp_dir, subdir), exist_ok=True)
+                            
+                            file_path = os.path.join(temp_dir, subdir, file_name)
+                            
+                            with open(file_path, 'wb') as f:
+                                f.write(file_response.content)
+                            files_found += 1
+                            logger.info(f"Downloaded: {file_name}")
+                    except Exception as e:
+                        logger.warning(f"Failed to download {src}: {e}")
+            
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                for root_dir, dirs, files in os.walk(temp_dir):
+                    for file in files:
+                        file_path = os.path.join(root_dir, file)
+                        arcname = os.path.relpath(file_path, temp_dir)
+                        zip_file.write(file_path, arcname)
+            
+            zip_buffer.seek(0)
+            
+            return StreamingResponse(
+                zip_buffer,
+                media_type="application/zip",
+                headers={
+                    "Content-Disposition": f"attachment; filename=scraped_{int(time.time())}.zip"
+                }
+            )
+            
+    except Exception as e:
+        logger.error(f"Scrape and zip failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/files/{url:path}")
+async def list_files(url: str):
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        files = []
+        
+        for tag in soup.find_all(['link', 'script', 'img', 'a']):
+            src = tag.get('src') or tag.get('href')
+            if src:
+                files.append({
+                    'url': src,
+                    'type': tag.name,
+                    'text': tag.get_text(strip=True)[:100]
+                })
+        
+        return {
+            'url': url,
+            'files_found': len(files),
+            'files': files[:50]
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

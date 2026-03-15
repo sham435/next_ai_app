@@ -32,6 +32,7 @@ export interface ScrapeProgressEvent {
  */
 export interface ScrapeCompleteEvent {
   jobId: string;
+  url: string;
   success: boolean;
   filesFound: number;
   location: string;

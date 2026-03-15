@@ -76,6 +76,7 @@ export class ScrapeProcessor extends WorkerHost {
 
       const result = {
         jobId,
+        url,
         success: true,
         filesFound: links.length,
         location: downloadDir,
@@ -97,6 +98,7 @@ export class ScrapeProcessor extends WorkerHost {
 
       this.gateway.emitComplete(jobId, {
         jobId,
+        url,
         success: false,
         filesFound: 0,
         location: '',
