@@ -1,7 +1,14 @@
 /**
  * Scrape method types
  */
-export type ScrapeMethod = 'fast' | 'full' | 'puppeteer' | 'static';
+export type ScrapeMethod =
+  | "fast"
+  | "auto"
+  | "full"
+  | "puppeteer"
+  | "selenium"
+  | "crawl4ai"
+  | "static";
 
 /**
  * Scrape request payload
@@ -52,21 +59,21 @@ export interface ScrapeCompleteEvent {
  * Scrape job stages
  */
 export type ScrapeStage =
-  | 'queued'
-  | 'fetching'
-  | 'parsing'
-  | 'downloading'
-  | 'complete'
-  | 'failed';
+  | "queued"
+  | "fetching"
+  | "parsing"
+  | "downloading"
+  | "complete"
+  | "failed";
 
 /**
  * Health check response
  */
 export interface HealthResponse {
-  status: 'ok' | 'degraded' | 'down';
+  status: "ok" | "degraded" | "down";
   timestamp: string;
   version: string;
-  redis?: 'connected' | 'disconnected';
+  redis?: "connected" | "disconnected";
   queue?: {
     waiting: number;
     active: number;
