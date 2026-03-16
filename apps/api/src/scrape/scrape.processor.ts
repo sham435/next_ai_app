@@ -25,12 +25,22 @@ export class ScrapeProcessor extends WorkerHost {
   }
 
   private async launchBrowser() {
+    const chromeBin = process.env.CHROME_BIN || process.env.PUPPETEER_EXECUTABLE_PATH;
     const isLocal = !!process.env.CHROME_EXECUTABLE_PATH;
     
+    // Use system Chromium if available, otherwise try @sparticuz/chromium-min
+    if (chromeBin || isLocal) {
+      return puppeteer.launch({
+        args: puppeteer.defaultArgs(),
+        executablePath: chromeBin || process.env.CHROME_EXECUTABLE_PATH,
+        headless: true,
+      });
+    }
+    
     return puppeteer.launch({
-      args: isLocal ? puppeteer.defaultArgs() : chromium.args,
+      args: chromium.args,
       defaultViewport: chromium.defaultViewport,
-      executablePath: process.env.CHROME_EXECUTABLE_PATH || await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v126.0.0/chromium-v126.0.0-pack.tar'),
+      executablePath: await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v126.0.0/chromium-v126.0.0-pack.tar'),
       headless: chromium.headless,
     });
   }
