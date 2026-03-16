@@ -52,7 +52,7 @@ export class ScrapeProcessor extends WorkerHost {
 
       $('a[href]').each((_, el) => {
         const href = $(el).attr('href');
-        if (href && (href.endsWith('.ts') || href.endsWith('.js') || href.endsWith('.json'))) {
+        if (href) {
           links.push(href.startsWith('http') ? href : new URL(href, url).toString());
         }
       });
