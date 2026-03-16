@@ -37,6 +37,10 @@ export class ScrapeService {
       return this.callPythonSelenium(url);
     }
 
+    if (method === 'crawl4ai') {
+      return this.callPythonCrawl4AI(url);
+    }
+
     // Default: use fallback chain
     return this.fallbackScrape(url);
   }
@@ -44,6 +48,7 @@ export class ScrapeService {
   private async fallbackScrape(url: string): Promise<ScrapeResponse> {
     const methods = [
       { name: 'static', fn: () => this.callPythonScraperStatic(url) },
+      { name: 'crawl4ai', fn: () => this.callPythonCrawl4AI(url) },
       { name: 'puppeteer', fn: () => this.addToWorkerQueue(url, 'puppeteer') },
       { name: 'selenium', fn: () => this.callPythonSelenium(url) },
     ];
@@ -109,6 +114,26 @@ export class ScrapeService {
       jobId: `python-selenium-${Date.now()}`,
       filesFound: data.files_found || 0,
       method: 'selenium',
+    };
+  }
+
+  private async callPythonCrawl4AI(url: string): Promise<ScrapeResponse> {
+    const response = await fetch(`${this.pythonScraperUrl}/scrape/crawl4ai`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, max_depth: 1, max_pages: 5 }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Crawl4AI scraper returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      jobId: `python-crawl4ai-${Date.now()}`,
+      filesFound: data.files_found || 0,
+      method: 'crawl4ai',
     };
   }
 

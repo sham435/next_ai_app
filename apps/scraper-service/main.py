@@ -6,6 +6,7 @@ import io
 import time
 import tempfile
 import shutil
+import asyncio
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
@@ -24,6 +25,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+
+# Crawl4AI imports
+from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, CacheMode
+from crawl4ai.content_scraping_strategy import LXMLWebScrapingStrategy
 
 logging.basicConfig(
     level=logging.INFO,
@@ -64,6 +69,13 @@ class SeleniumScrapeRequest(BaseModel):
     url: str
     wait_for: Optional[str] = None
     scroll: bool = False
+    screenshot: bool = False
+
+class Crawl4AIRequest(BaseModel):
+    url: str
+    max_depth: int = 1
+    max_pages: int = 10
+    scroll: bool = True
     screenshot: bool = False
 
 class ScrapeResponse(BaseModel):
@@ -191,6 +203,44 @@ async def scrape_selenium(request: SeleniumScrapeRequest):
     except Exception as e:
         logger.error(f"Selenium scrape failed: {e}")
         raise HTTPException(status_code=500, detail=f"Selenium scrape failed: {str(e)}")
+
+async def scrape_with_crawl4ai(url: str, max_depth: int = 1, max_pages: int = 10) -> tuple[str, int]:
+    config = CrawlerRunConfig(
+        scraping_strategy=LXMLWebScrapingStrategy(),
+        cache_mode=CacheMode.BYPASS,
+        verbose=False,
+    )
+    
+    async with AsyncWebCrawler() as crawler:
+        results = await crawler.arun(url=url, config=config)
+        
+        if results:
+            first_result = results[0]
+            html = first_result.markdown or first_result.html or ""
+            files_found = len(results)
+            return html, files_found
+        return "", 0
+
+@app.post("/scrape/crawl4ai", response_model=ScrapeResponse)
+async def scrape_crawl4ai(request: Crawl4AIRequest):
+    try:
+        logger.info(f"Crawl4AI scrape request for: {request.url}")
+        html, files_found = await scrape_with_crawl4ai(
+            request.url, 
+            request.max_depth, 
+            request.max_pages
+        )
+        
+        return ScrapeResponse(
+            url=request.url,
+            content=html[:50000] if len(html) > 50000 else html,
+            method="crawl4ai",
+            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            files_found=files_found
+        )
+    except Exception as e:
+        logger.error(f"Crawl4AI scrape failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Crawl4AI scrape failed: {str(e)}")
 
 @app.get("/")
 async def root():

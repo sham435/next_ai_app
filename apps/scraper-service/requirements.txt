@@ -7,3 +7,5 @@ lxml==5.1.0
 python-multipart==0.0.6
 selenium==4.15.0
 webdriver-manager==4.0.1
+crawl4ai==0.4.1
+playwright==1.48.0

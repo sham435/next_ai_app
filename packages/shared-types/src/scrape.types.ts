@@ -1,7 +1,7 @@
 /**
  * Scrape method types
  */
-export type ScrapeMethod = 'fast' | 'auto' | 'full' | 'puppeteer' | 'selenium' | 'static';
+export type ScrapeMethod = 'fast' | 'auto' | 'full' | 'puppeteer' | 'selenium' | 'crawl4ai' | 'static';
 
 /**
  * Scrape request payload
@@ -9,7 +9,7 @@ export type ScrapeMethod = 'fast' | 'auto' | 'full' | 'puppeteer' | 'selenium' |
 export interface ScrapeRequest {
   /** URL to scrape — must be HTTPS */
   url: string;
-  /** Scrape method: auto (fallback chain), fast (simple), static (HTTP), puppeteer (JS), selenium (deep JS) */
+  /** Scrape method: auto (fallback chain), fast (simple), static (HTTP), puppeteer (JS), selenium (deep JS), crawl4ai (deep crawl) */
   method?: ScrapeMethod;
 }
 
