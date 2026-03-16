@@ -1,9 +1,16 @@
 /**
+ * Scrape method types
+ */
+export type ScrapeMethod = 'fast' | 'full' | 'puppeteer' | 'static';
+
+/**
  * Scrape request payload
  */
 export interface ScrapeRequest {
   /** URL to scrape — must be HTTPS */
   url: string;
+  /** Scrape method: fast (quick), full (with assets), puppeteer (JS rendering), static (simple) */
+  method?: ScrapeMethod;
 }
 
 /**
@@ -15,6 +22,7 @@ export interface ScrapeResponse {
   filesFound?: number;
   location?: string;
   error?: string;
+  method?: ScrapeMethod;
 }
 
 /**
@@ -84,6 +92,7 @@ export interface ScrapeJobData {
   priority: JobPriority;
   requestedAt: string;
   requestIp?: string;
+  method?: ScrapeMethod;
 }
 
 /**

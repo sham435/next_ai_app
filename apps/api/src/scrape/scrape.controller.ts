@@ -14,8 +14,8 @@ export class ScrapeController {
 
   @Post()
   async scrape(@Body() dto: ScrapeDto): Promise<ScrapeResponse> {
-    this.logger.log(`Scrape request for: ${dto.url}`);
-    return this.scrapeService.addToQueue(dto.url);
+    this.logger.log(`Scrape request for: ${dto.url} (method: ${dto.method || 'fast'})`);
+    return this.scrapeService.addToQueue(dto.url, dto.method);
   }
 
   @Post('download')

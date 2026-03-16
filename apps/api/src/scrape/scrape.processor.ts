@@ -35,6 +35,37 @@ export class ScrapeProcessor extends WorkerHost {
     });
   }
 
+  private async scrapeStatic(url: string, jobId: string): Promise<string[]> {
+    this.emitStage(jobId, 20, 'fetching', 'Fetching page content...');
+    
+    const timeout = this.config.get<number>('REQUEST_TIMEOUT', 10000);
+    const response = await axios.get(url, {
+      timeout,
+      maxContentLength: 10 * 1024 * 1024,
+      headers: {
+        'User-Agent': 'ScrapePlatform/1.0',
+      },
+    });
+
+    this.emitStage(jobId, 50, 'parsing', 'Parsing HTML content...');
+    
+    const $ = cheerio.load(response.data);
+    const links: string[] = [];
+
+    $('a[href]').each((_, el) => {
+      const href = $(el).attr('href');
+      if (href) {
+        try {
+          links.push(href.startsWith('http') ? href : new URL(href, url).toString());
+        } catch {
+          links.push(href);
+        }
+      }
+    });
+
+    return links;
+  }
+
   private async scrapeWithPuppeteer(url: string, jobId: string): Promise<{ links: string[], title: string, nextData?: Record<string, unknown>, flightData?: unknown[] }> {
     this.emitStage(jobId, 30, 'fetching', 'Launching browser...');
     
@@ -129,15 +160,29 @@ export class ScrapeProcessor extends WorkerHost {
   }
 
   async process(job: Job<ScrapeJobData>) {
-    const { url } = job.data;
+    const { url, method } = job.data;
     const jobId = job.id as string;
     const startTime = Date.now();
 
-    this.logger.log(`Processing job ${jobId}: ${url}`);
+    this.logger.log(`Processing job ${jobId}: ${url} (method: ${method || 'puppeteer'})`);
 
     try {
-      // Use Puppeteer for JavaScript rendering
-      const { links, nextData, flightData } = await this.scrapeWithPuppeteer(url, jobId);
+      // Use Puppeteer for JavaScript rendering (default)
+      // Use static scraping for 'static' method
+      let links: string[];
+      let nextData: Record<string, unknown> | undefined;
+      let flightData: unknown[] | undefined;
+
+      if (method === 'static') {
+        // Simple static scraping with axios/cheerio
+        links = await this.scrapeStatic(url, jobId);
+      } else {
+        // Puppeteer for JS rendering (puppeteer method or fallback)
+        const result = await this.scrapeWithPuppeteer(url, jobId);
+        links = result.links;
+        nextData = result.nextData;
+        flightData = result.flightData;
+      }
 
       // Log Next.js data found
       if (nextData) {
