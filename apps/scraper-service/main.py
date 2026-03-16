@@ -16,6 +16,15 @@ from typing import Optional
 import requests
 from bs4 import BeautifulSoup
 
+# Selenium imports
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -50,6 +59,12 @@ app.add_middleware(
 class ScrapeRequest(BaseModel):
     url: str
     selector: Optional[str] = None
+
+class SeleniumScrapeRequest(BaseModel):
+    url: str
+    wait_for: Optional[str] = None
+    scroll: bool = False
+    screenshot: bool = False
 
 class ScrapeResponse(BaseModel):
     url: str
@@ -115,6 +130,67 @@ async def scrape(request: ScrapeRequest):
     except Exception as e:
         logger.error(f"Scraping failed: {e}")
         raise HTTPException(status_code=500, detail=f"Scraping failed: {str(e)}")
+
+def scrape_with_selenium(url: str, wait_for: Optional[str] = None, scroll: bool = False) -> tuple[str, Optional[str]]:
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    
+    chrome_bin = os.environ.get("CHROME_BIN", "/usr/bin/google-chrome-stable")
+    chromedriver_path = os.environ.get("CHROMEDRIVER_PATH", "/usr/local/bin/chromedriver")
+    
+    service = Service(executable_path=chromedriver_path)
+    options.binary_location = chrome_bin
+    
+    driver = None
+    try:
+        logger.info(f"Starting Selenium scrape for: {url}")
+        driver = webdriver.Chrome(service=service, options=options)
+        driver.get(url)
+        
+        if wait_for:
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, wait_for))
+            )
+        
+        if scroll:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(1)
+        
+        html = driver.page_source
+        screenshot = driver.get_screenshot_as_base64() if scroll else None
+        
+        return html, screenshot
+        
+    except Exception as e:
+        logger.error(f"Selenium scrape failed: {e}")
+        raise
+    finally:
+        if driver:
+            driver.quit()
+
+@app.post("/scrape/selenium", response_model=ScrapeResponse)
+async def scrape_selenium(request: SeleniumScrapeRequest):
+    try:
+        logger.info(f"Selenium scrape request for: {request.url}")
+        html, _ = scrape_with_selenium(request.url, request.wait_for, request.scroll)
+        
+        soup = BeautifulSoup(html, 'html.parser')
+        files_found = len(soup.find_all('a', href=True))
+        
+        return ScrapeResponse(
+            url=request.url,
+            content=html[:50000] if len(html) > 50000 else html,
+            method="selenium",
+            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            files_found=files_found
+        )
+    except Exception as e:
+        logger.error(f"Selenium scrape failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Selenium scrape failed: {str(e)}")
 
 @app.get("/")
 async def root():

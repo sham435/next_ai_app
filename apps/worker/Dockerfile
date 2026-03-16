@@ -20,13 +20,12 @@ RUN npx tsc
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install Chromium for Puppeteer
-RUN apk add --no-cache chromium chromium-chromedriver
+RUN apk add --no-cache chromium
 
-ENV CHROME_BIN=/usr/bin/chromium-browser \
-    CHROMEDRIVER_PATH=/usr/bin/chromedriver \
-    PUPPETEER_SKIP_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+ENV PUPPETEER_SKIP_CHROMIUM_BROWSER_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 ENV NODE_ENV=production
 
