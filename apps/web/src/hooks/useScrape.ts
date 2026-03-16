@@ -7,6 +7,7 @@ import type {
   ScrapeProgressEvent,
   ScrapeCompleteEvent,
   ScrapeStage,
+  ScrapeMethod,
 } from '@scrape-platform/shared-types';
 
 const getApiUrl = () => {
@@ -57,7 +58,7 @@ export function useScrape() {
   }, [cleanup]);
 
   const start = useCallback(
-    async (url: string) => {
+    async (url: string, method: ScrapeMethod = 'fast') => {
       cleanup();
 
       setState({
@@ -87,7 +88,7 @@ export function useScrape() {
             message: 'Connected. Starting scrape...',
           }));
 
-          socket.emit('startScrape', { url }, (response: ScrapeResponse) => {
+          socket.emit('startScrape', { url, method }, (response: ScrapeResponse) => {
             if (!response.success) {
               setState((prev) => ({
                 ...prev,

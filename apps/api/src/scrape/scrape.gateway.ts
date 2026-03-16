@@ -10,7 +10,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { ScrapeService } from './scrape.service';
-import type { ScrapeResponse } from '@scrape-platform/shared-types';
+import type { ScrapeResponse, ScrapeMethod } from '@scrape-platform/shared-types';
 
 @WebSocketGateway({
   cors: {
@@ -39,11 +39,11 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('startScrape')
   async handleScrape(
-    @MessageBody() data: { url: string },
+    @MessageBody() data: { url: string; method?: ScrapeMethod },
     @ConnectedSocket() client: Socket,
   ): Promise<ScrapeResponse> {
     try {
-      const result = await this.scrapeService.addToQueue(data.url);
+      const result = await this.scrapeService.addToQueue(data.url, data.method);
       return result;
     } catch (error) {
       return {
