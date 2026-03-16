@@ -27,6 +27,9 @@ RUN wget -q -O /tmp/chromedriver.zip "https://storage.googleapis.com/chrome-for-
     unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
     rm /tmp/chromedriver.zip
 
+# Install Python dependencies
+# Updated: Force playwright version for crawl4ai compatibility
+
 # Set environment variables for Chrome
 ENV CHROME_BIN=/usr/bin/google-chrome-stable \
     CHROMEDRIVER_PATH=/usr/local/bin/chromedriver \
