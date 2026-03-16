@@ -44,6 +44,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Verify critical imports work
+try:
+    from selenium import webdriver
+    logger.info("Selenium imported successfully")
+except Exception as e:
+    logger.error(f"Failed to import selenium: {e}")
+
+try:
+    from crawl4ai import AsyncWebCrawler
+    logger.info("Crawl4AI imported successfully")
+except Exception as e:
+    logger.error(f"Failed to import crawl4ai: {e}")
+
 app = FastAPI()
 
 @app.on_event("startup")
@@ -55,6 +68,15 @@ async def startup_event():
     logger.info(f"Current directory: {os.getcwd()}")
     logger.info(f"Files in directory: {os.listdir('.')}")
     logger.info(f"Environment PORT: {os.environ.get('PORT', 'Not set')}")
+    
+    # Log all registered routes
+    try:
+        routes = [r.path for r in app.routes if hasattr(r, 'path')]
+        logger.info(f"Total routes: {len(routes)}")
+        for p in routes:
+            logger.info(f"Route: {p}")
+    except Exception as e:
+        logger.error(f"Failed to log routes: {e}")
     logger.info("=" * 50)
 
 @app.on_event("shutdown")
