@@ -1,3 +1,4 @@
+# Build from monorepo root
 FROM node:20-alpine AS deps
 WORKDIR /app
 
