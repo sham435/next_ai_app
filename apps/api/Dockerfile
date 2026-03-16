@@ -35,7 +35,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/apps/api/package.json ./package.json
+COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
 RUN mkdir -p /app/download && chown -R nodejs:nodejs /app/download
