@@ -38,24 +38,29 @@ from crawl4ai.deep_crawling.filters import (
 )
 from crawl4ai.deep_crawling.scorers import KeywordRelevanceScorer
 
+# Import verification at module load time
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
+logger.info("MODULE LOADING - Starting imports...")
+
 # Verify critical imports work
 try:
     from selenium import webdriver
-    logger.info("Selenium imported successfully")
+    logger.info("MODULE LOAD: Selenium imported successfully")
 except Exception as e:
-    logger.error(f"Failed to import selenium: {e}")
+    logger.error(f"MODULE LOAD: Failed to import selenium: {e}")
 
 try:
     from crawl4ai import AsyncWebCrawler
-    logger.info("Crawl4AI imported successfully")
+    logger.info("MODULE LOAD: Crawl4AI imported successfully")
 except Exception as e:
-    logger.error(f"Failed to import crawl4ai: {e}")
+    logger.error(f"MODULE LOAD: Failed to import crawl4ai: {e}")
+
+logger.info("MODULE LOADING - Imports complete")
 
 app = FastAPI()
 
