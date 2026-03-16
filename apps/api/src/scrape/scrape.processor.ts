@@ -32,19 +32,28 @@ export class ScrapeProcessor extends WorkerHost {
     const isLocal = !!process.env.CHROME_EXECUTABLE_PATH;
 
     const executablePath =
-      chromeBin || process.env.CHROME_EXECUTABLE_PATH || "/usr/bin/chromium";
+      chromeBin || process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium";
+
+    const args = [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-blink-features=AutomationControlled",
+      "--disable-extensions",
+      "--disable-gpu",
+    ];
+
+    // Add proxy support if configured
+    const proxyServer = process.env.PUPPETEER_PROXY_SERVER;
+    if (proxyServer) {
+      args.push(`--proxy-server=${proxyServer}`);
+      this.logger.log(`Using proxy: ${proxyServer}`);
+    }
 
     return puppeteer.launch({
       executablePath,
       headless: "new",
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-blink-features=AutomationControlled",
-        "--disable-extensions",
-        "--disable-gpu",
-      ],
+      args,
     });
   }
 
