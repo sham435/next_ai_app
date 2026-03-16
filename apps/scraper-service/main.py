@@ -7,6 +7,7 @@ import time
 import tempfile
 import shutil
 import asyncio
+import certifi
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
@@ -16,6 +17,10 @@ from pydantic import BaseModel
 from typing import Optional
 import requests
 from bs4 import BeautifulSoup
+
+# Set default SSL cert path for requests
+os.environ['SSL_CERT_FILE'] = certifi.where()
+os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
 
 # Selenium imports
 from selenium import webdriver

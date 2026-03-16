@@ -1,5 +1,11 @@
 FROM python:3.11-slim
 
+# Install CA certificates for SSL verification
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    && update-ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install Chrome and dependencies for Selenium + Playwright/Crawl4AI
 RUN apt-get update && apt-get install -y \
     wget \
