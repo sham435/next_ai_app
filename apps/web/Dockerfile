@@ -33,7 +33,6 @@ COPY next.config.* ./
 COPY tsconfig.json ./
 COPY tailwind.config.* ./
 COPY postcss.config.* ./
-COPY next-env.d.ts ./
 
 RUN npm run build
 
