@@ -6,6 +6,8 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import * as fs from 'fs';
 import * as path from 'path';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium-min';
 import { ScrapeGateway } from './scrape.gateway';
 import { MetricsService } from '../metrics/metrics.service';
 import type { ScrapeJobData, ScrapeStage } from '@scrape-platform/shared-types';
@@ -22,6 +24,60 @@ export class ScrapeProcessor extends WorkerHost {
     super();
   }
 
+  private async launchBrowser() {
+    const isLocal = !!process.env.CHROME_EXECUTABLE_PATH;
+    
+    return puppeteer.launch({
+      args: isLocal ? puppeteer.defaultArgs() : chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: process.env.CHROME_EXECUTABLE_PATH || await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v126.0.0/chromium-v126.0.0-pack.tar'),
+      headless: chromium.headless,
+    });
+  }
+
+  private async scrapeWithPuppeteer(url: string, jobId: string): Promise<{ links: string[], title: string }> {
+    this.emitStage(jobId, 30, 'fetching', 'Launching browser...');
+    
+    const browser = await this.launchBrowser();
+    const links: string[] = [];
+    let title = '';
+    
+    try {
+      const page = await browser.newPage();
+      
+      this.emitStage(jobId, 40, 'fetching', 'Loading page with JavaScript...');
+      await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+      
+      title = await page.title();
+      
+      this.emitStage(jobId, 60, 'parsing', 'Extracting links...');
+      const hrefs: string[] = await page.evaluate(() => {
+        const anchors = document.querySelectorAll('a[href]');
+        const results: string[] = [];
+        anchors.forEach((a) => {
+          const el = a as HTMLAnchorElement;
+          if (el.href) results.push(el.href);
+        });
+        return results;
+      });
+      
+      links.push(...hrefs.map(href => {
+        try {
+          return href.startsWith('http') ? href : new URL(href, url).toString();
+        } catch {
+          return href;
+        }
+      }));
+      
+      await browser.close();
+    } catch (error) {
+      await browser.close();
+      throw error;
+    }
+    
+    return { links, title };
+  }
+
   async process(job: Job<ScrapeJobData>) {
     const { url } = job.data;
     const jobId = job.id as string;
@@ -30,32 +86,8 @@ export class ScrapeProcessor extends WorkerHost {
     this.logger.log(`Processing job ${jobId}: ${url}`);
 
     try {
-      // Stage: Fetching
-      this.emitStage(jobId, 20, 'fetching', 'Fetching page content...');
-      await job.updateProgress(20);
-
-      const timeout = this.config.get<number>('REQUEST_TIMEOUT', 10000);
-      const response = await axios.get(url, {
-        timeout,
-        maxContentLength: 10 * 1024 * 1024, // 10MB max
-        headers: {
-          'User-Agent': 'ScraPlatform/1.0',
-        },
-      });
-
-      // Stage: Parsing
-      this.emitStage(jobId, 50, 'parsing', 'Parsing HTML content...');
-      await job.updateProgress(50);
-
-      const $ = cheerio.load(response.data);
-      const links: string[] = [];
-
-      $('a[href]').each((_, el) => {
-        const href = $(el).attr('href');
-        if (href) {
-          links.push(href.startsWith('http') ? href : new URL(href, url).toString());
-        }
-      });
+      // Use Puppeteer for JavaScript rendering
+      const { links } = await this.scrapeWithPuppeteer(url, jobId);
 
       // Stage: Downloading
       this.emitStage(jobId, 70, 'downloading', `Found ${links.length} files. Preparing download...`);

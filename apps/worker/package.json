@@ -9,16 +9,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "bullmq": "^5.0.0",
-    "ioredis": "5.3.2",
+    "@scrape-platform/shared-types": "*",
+    "@sparticuz/chromium-min": "126.0.0",
     "axios": "^1.7.0",
+    "bullmq": "^5.0.0",
     "cheerio": "^1.0.0",
+    "ioredis": "5.3.2",
     "prom-client": "^15.1.0",
-    "@scrape-platform/shared-types": "*"
+    "puppeteer-core": "22.13.1"
   },
   "devDependencies": {
-    "typescript": "^5.9.0",
+    "@types/node": "^22.0.0",
     "tsx": "^4.19.0",
-    "@types/node": "^22.0.0"
+    "typescript": "^5.9.0"
   }
 }
