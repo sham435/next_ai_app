@@ -1,5 +1,5 @@
 # API Service Dockerfile
-# Uses Root Directory: apps/api in Railway
+# Assumes Root Directory = apps/api in Railway
 
 FROM node:20-alpine AS deps
 WORKDIR /app
@@ -12,7 +12,8 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY package*.json ./
-COPY tsconfig*.json ./
+COPY tsconfig.json ./
+COPY tsconfig.build.json ./
 COPY nest-cli.json ./
 COPY src ./src
 
@@ -21,7 +22,6 @@ RUN npx tsc
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install Chromium for Puppeteer
 RUN apk add --no-cache chromium chromium-chromedriver
 
 ENV CHROME_BIN=/usr/bin/chromium-browser \
