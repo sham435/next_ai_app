@@ -12,7 +12,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY apps/api/package*.json ./
 COPY apps/api/tsconfig.json ./
-COPY tsconfig.base.json ./
+COPY apps/api/tsconfig.base.json ./
 COPY apps/api/tsconfig.build.json ./
 COPY apps/api/nest-cli.json ./
 COPY apps/api/src ./src
