@@ -8,5 +8,5 @@ python-multipart==0.0.6
 selenium==4.15.0
 webdriver-manager==4.0.1
 crawl4ai==0.4.1
-playwright==1.48.0
+playwright>=1.49.0
 certifi==2024.8.30
