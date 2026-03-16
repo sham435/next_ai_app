@@ -13,10 +13,10 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
-COPY tsconfig.base.json ./
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/shared-types/tsconfig.json ./packages/shared-types/
 COPY packages/shared-types/src ./packages/shared-types/src
+COPY tsconfig.base.json ./
 
 WORKDIR /app/packages/shared-types
 RUN npx tsc
@@ -26,13 +26,13 @@ RUN mkdir -p ../node_modules/@scrape-platform/shared-types && \
     cp ./package.json ../node_modules/@scrape-platform/shared-types/
 
 WORKDIR /app
-COPY package.json ./
-COPY src ./src
-COPY public ./public
-COPY next.config.* ./
-COPY tsconfig.json ./
-COPY tailwind.config.* ./
-COPY postcss.config.* ./
+COPY apps/web/package.json ./
+COPY apps/web/src ./src
+COPY apps/web/public ./public
+COPY apps/web/next.config.* ./
+COPY apps/web/tsconfig.json ./
+COPY apps/web/tailwind.config.* ./
+COPY apps/web/postcss.config.* ./
 
 RUN npm run build
 
