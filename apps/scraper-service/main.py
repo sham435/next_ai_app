@@ -27,8 +27,16 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
 # Crawl4AI imports
-from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, CacheMode
+from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, CacheMode, BrowserConfig
 from crawl4ai.content_scraping_strategy import LXMLWebScrapingStrategy
+from crawl4ai.deep_crawling import BFSDeepCrawlStrategy, DFSDeepCrawlStrategy, BestFirstCrawlingStrategy
+from crawl4ai.deep_crawling.filters import (
+    FilterChain,
+    URLPatternFilter,
+    DomainFilter,
+    ContentTypeFilter,
+)
+from crawl4ai.deep_crawling.scorers import KeywordRelevanceScorer
 
 logging.basicConfig(
     level=logging.INFO,
@@ -205,10 +213,24 @@ async def scrape_selenium(request: SeleniumScrapeRequest):
         raise HTTPException(status_code=500, detail=f"Selenium scrape failed: {str(e)}")
 
 async def scrape_with_crawl4ai(url: str, max_depth: int = 1, max_pages: int = 10) -> tuple[str, int]:
+    chrome_path = os.environ.get("CHROME_BIN", "/usr/bin/google-chrome-stable")
+    
     config = CrawlerRunConfig(
         scraping_strategy=LXMLWebScrapingStrategy(),
         cache_mode=CacheMode.BYPASS,
         verbose=False,
+        js_enabled=True,
+        wait_for_selector="body",
+        browser_config=BrowserConfig(
+            executable_path=chrome_path,
+            headless=True,
+            args=[
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--disable-setuid-sandbox"
+            ]
+        )
     )
     
     async with AsyncWebCrawler() as crawler:
@@ -220,6 +242,60 @@ async def scrape_with_crawl4ai(url: str, max_depth: int = 1, max_pages: int = 10
             files_found = len(results)
             return html, files_found
         return "", 0
+
+async def scrape_with_crawl4ai_ai(url: str, query: str = None) -> tuple[str, dict, int]:
+    """AI-powered extraction using Crawl4AI's LLM extraction"""
+    from crawl4ai.extraction_strategy import LLMExtractionStrategy
+    
+    extraction_strategy = LLMExtractionStrategy(
+        provider="openai/gpt-4o-mini",
+        api_token=os.getenv("OPENAI_API_KEY", ""),
+        extraction_type="content" if not query else "query",
+        query=query,
+    )
+    
+    config = CrawlerRunConfig(
+        extraction_strategy=extraction_strategy,
+        cache_mode=CacheMode.BYPASS,
+        js_enabled=True,
+    )
+    
+    async with AsyncWebCrawler() as crawler:
+        results = await crawler.arun(url=url, config=config)
+        
+        if results:
+            first_result = results[0]
+            html = first_result.markdown or first_result.html or ""
+            # Try to get extracted JSON data
+            extracted = None
+            if hasattr(first_result, 'extracted_content'):
+                try:
+                    extracted = first_result.extracted_content
+                except:
+                    pass
+            return html, extracted, len(results)
+        return "", None, 0
+
+class Crawl4AIExtractRequest(BaseModel):
+    url: str
+    query: Optional[str] = None
+    extract_json: bool = False
+
+
+class DeepCrawlRequest(BaseModel):
+    url: str
+    strategy: str = "bfs"
+    max_depth: int = 2
+    max_pages: Optional[int] = None
+    score_threshold: Optional[float] = None
+    include_external: bool = False
+    allowed_domains: Optional[list[str]] = None
+    blocked_domains: Optional[list[str]] = None
+    url_patterns: Optional[list[str]] = None
+    content_types: Optional[list[str]] = ["text/html"]
+    keywords: Optional[list[str]] = None
+    keyword_weight: float = 1.0
+    stream: bool = False
 
 @app.post("/scrape/crawl4ai", response_model=ScrapeResponse)
 async def scrape_crawl4ai(request: Crawl4AIRequest):
@@ -242,6 +318,100 @@ async def scrape_crawl4ai(request: Crawl4AIRequest):
         logger.error(f"Crawl4AI scrape failed: {e}")
         raise HTTPException(status_code=500, detail=f"Crawl4AI scrape failed: {str(e)}")
 
+
+async def deep_crawl(request: DeepCrawlRequest):
+    filters = []
+    if request.allowed_domains or request.blocked_domains:
+        filters.append(DomainFilter(
+            allowed_domains=request.allowed_domains or [],
+            blocked_domains=request.blocked_domains or []
+        ))
+    if request.url_patterns:
+        filters.append(URLPatternFilter(patterns=request.url_patterns))
+    if request.content_types:
+        filters.append(ContentTypeFilter(allowed_types=request.content_types))
+    filter_chain = FilterChain(filters) if filters else None
+
+    scorer = None
+    if request.keywords:
+        scorer = KeywordRelevanceScorer(
+            keywords=request.keywords,
+            weight=request.keyword_weight
+        )
+
+    strategy_map = {
+        "bfs": BFSDeepCrawlStrategy,
+        "dfs": DFSDeepCrawlStrategy,
+        "bestfirst": BestFirstCrawlingStrategy,
+    }
+
+    strategy_class = strategy_map.get(request.strategy)
+    if not strategy_class:
+        raise HTTPException(status_code=400, detail=f"Invalid strategy: {request.strategy}")
+
+    strategy = strategy_class(
+        max_depth=request.max_depth,
+        include_external=request.include_external,
+        filter_chain=filter_chain,
+        url_scorer=scorer,
+        max_pages=request.max_pages,
+        score_threshold=request.score_threshold
+    )
+
+    config = CrawlerRunConfig(
+        deep_crawl_strategy=strategy,
+        scraping_strategy=LXMLWebScrapingStrategy(),
+        stream=request.stream,
+        verbose=True,
+        cache_mode=CacheMode.BYPASS
+    )
+
+    async with AsyncWebCrawler() as crawler:
+        if request.stream:
+            return crawler.arun(url=request.url, config=config)
+        else:
+            results = await crawler.arun(url=request.url, config=config)
+            output = []
+            for r in results:
+                output.append({
+                    "url": r.url,
+                    "depth": r.metadata.get("depth"),
+                    "score": r.metadata.get("score"),
+                    "html": r.markdown[:500] if r.markdown else r.html[:500] if r.html else None,
+                })
+            return output
+
+
+@app.post("/crawl/deep")
+async def deep_crawl_endpoint(request: DeepCrawlRequest):
+    try:
+        logger.info(f"Deep crawl request for: {request.url}, strategy: {request.strategy}")
+        
+        if request.stream:
+            async def event_generator():
+                crawler_results = await deep_crawl(request)
+                async for result in crawler_results:
+                    import json
+                    yield f"data: {json.dumps({
+                        'url': result.url,
+                        'depth': result.metadata.get('depth'),
+                        'score': result.metadata.get('score'),
+                        'html': result.markdown[:500] if result.markdown else result.html[:500] if result.html else None,
+                    })}\n\n"
+            
+            return StreamingResponse(event_generator(), media_type="text/event-stream")
+        else:
+            results = await deep_crawl(request)
+            return {
+                "total": len(results),
+                "results": results
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Deep crawl failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Deep crawl failed: {str(e)}")
+
 @app.get("/")
 async def root():
     return {
@@ -252,7 +422,9 @@ async def root():
             "ping": "/ping",
             "scrape": "/scrape (POST)",
             "scrape-and-zip": "/scrape-and-zip (POST)",
-            "files": "/files/{url} (GET)"
+            "files": "/files/{url} (GET)",
+            "crawl4ai": "/scrape/crawl4ai (POST)",
+            "deep-crawl": "/crawl/deep (POST)"
         }
     }
 

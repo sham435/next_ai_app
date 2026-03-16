@@ -46,11 +46,12 @@ export class ScrapeService {
   }
 
   private async fallbackScrape(url: string): Promise<ScrapeResponse> {
+    // Modern approach: Crawl4AI first (AI-powered, auto-rendering)
     const methods = [
-      { name: 'static', fn: () => this.callPythonScraperStatic(url) },
       { name: 'crawl4ai', fn: () => this.callPythonCrawl4AI(url) },
-      { name: 'puppeteer', fn: () => this.addToWorkerQueue(url, 'puppeteer') },
       { name: 'selenium', fn: () => this.callPythonSelenium(url) },
+      { name: 'puppeteer', fn: () => this.addToWorkerQueue(url, 'puppeteer') },
+      { name: 'static', fn: () => this.callPythonScraperStatic(url) },
     ];
 
     let lastError = '';

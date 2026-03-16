@@ -40,6 +40,8 @@ EXPOSE 8000
 ENV PORT=8000
 ENV CHROME_BIN=/usr/bin/google-chrome-stable
 ENV CHROMEDRIVER_PATH=/usr/local/bin/chromedriver
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+ENV PUPPETEER_CACHE_DIR=/app/.cache/puppeteer
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:8000/health || exit 1
