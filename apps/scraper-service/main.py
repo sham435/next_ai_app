@@ -424,12 +424,12 @@ async def deep_crawl_endpoint(request: DeepCrawlRequest):
                 crawler_results = await deep_crawl(request)
                 async for result in crawler_results:
                     import json
-                    yield f"data: {json.dumps({
+                    yield f"data: {json.dumps({{" + f"""
                         'url': result.url,
                         'depth': result.metadata.get('depth'),
                         'score': result.metadata.get('score'),
                         'html': result.markdown[:500] if result.markdown else result.html[:500] if result.html else None,
-                    })}\n\n"
+                    }})}\\n\\n"
             
             return StreamingResponse(event_generator(), media_type="text/event-stream")
         else:
