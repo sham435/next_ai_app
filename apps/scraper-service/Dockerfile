@@ -40,6 +40,7 @@ ENV CHROME_BIN=/usr/bin/google-chrome-stable \
 WORKDIR /app
 
 COPY apps/scraper-service/requirements.txt .
+RUN pip install --no-cache-dir playwright>=1.49.0
 RUN pip install --no-cache-dir -r requirements.txt
 RUN playwright install chromium --with-deps
 
