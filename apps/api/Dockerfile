@@ -1,21 +1,20 @@
 # API Service Dockerfile
-# Assumes Root Directory = apps/api in Railway
 
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-COPY package*.json ./
+COPY apps/api/package*.json ./
 RUN npm install
 
 FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY package*.json ./
-COPY tsconfig.json ./
-COPY tsconfig.build.json ./
-COPY nest-cli.json ./
-COPY src ./src
+COPY apps/api/package*.json ./
+COPY apps/api/tsconfig.json ./
+COPY apps/api/tsconfig.build.json ./
+COPY apps/api/nest-cli.json ./
+COPY apps/api/src ./src
 
 RUN npx tsc
 
@@ -35,7 +34,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/apps/api/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
 RUN mkdir -p /app/download && chown -R nodejs:nodejs /app/download
