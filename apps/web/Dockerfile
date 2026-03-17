@@ -2,12 +2,12 @@ ARG BUILD_DATE
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY tsconfig.base.json ./
 
-RUN npm ci
+RUN npm install
 
 FROM node:20-alpine AS builder
 WORKDIR /app
@@ -26,7 +26,7 @@ RUN mkdir -p ../node_modules/@scrape-platform/shared-types && \
 
 WORKDIR /app/apps/web
 COPY apps/web/package.json ./
-RUN npm ci
+RUN npm install
 
 COPY apps/web/src ./src
 COPY apps/web/public ./public
