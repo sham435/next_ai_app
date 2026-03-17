@@ -26,6 +26,11 @@ RUN mkdir -p ../node_modules/@scrape-platform/shared-types && \
 
 WORKDIR /app/apps/web
 COPY apps/web/package.json ./
+
+RUN mkdir -p node_modules/@scrape-platform && \
+    cp -r ../node_modules/@scrape-platform/shared-types ./node_modules/@scrape-platform/ && \
+    sed -i 's|"@scrape-platform/shared-types": "\*"|"@scrape-platform/shared-types": "file:./node_modules/@scrape-platform/shared-types"|g' package.json
+
 RUN npm install
 
 COPY apps/web/src ./src
