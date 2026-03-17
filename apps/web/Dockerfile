@@ -25,7 +25,6 @@ RUN mkdir -p ../node_modules/@scrape-platform/shared-types && \
     cp ./package.json ../node_modules/@scrape-platform/shared-types/
 
 WORKDIR /app/apps/web
-COPY apps/web/package.json ./
 
 RUN mkdir -p node_modules/@scrape-platform && \
     cp -r ../node_modules/@scrape-platform/shared-types ./node_modules/@scrape-platform/ && \
