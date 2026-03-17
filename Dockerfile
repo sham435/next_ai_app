@@ -1,28 +1,28 @@
-FROM node:20-alpine AS deps
-ARG SERVICE=web
+# ---------- BASE ----------
+FROM node:20-alpine AS base
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-COPY apps/${SERVICE}/package.json ./apps/${SERVICE}/
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared-types/package.json ./packages/shared-types/
 
-RUN npm ci
+RUN npm install
 
-FROM node:20-alpine AS builder
-ARG SERVICE=web
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY apps/${SERVICE} ./apps/${SERVICE}/
+# ---------- BUILDER ----------
+FROM base AS builder
 
-WORKDIR /app/apps/${SERVICE}
-RUN npm run build
+COPY . .
 
+RUN npm run build --workspace=@scrape-platform/shared-types
+
+RUN npm run build --workspace=web
+
+# ---------- RUNNER ----------
 FROM node:20-alpine AS runner
-ARG SERVICE=web
-WORKDIR /app/apps/${SERVICE}
+WORKDIR /app
 
 ENV NODE_ENV=production
 
-EXPOSE 3000
-ENV PORT=3000
+COPY --from=builder /app ./
 
-CMD ["node", "server.js"]
+CMD ["npm", "run", "start"]

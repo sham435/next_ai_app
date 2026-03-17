@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@scrape-platform/shared-types": "*",
+    "@scrape-platform/shared-types": "workspace:*",
     "axios": "1.13.6",
     "cheerio": "1.2.0",
     "next": "^15.1.0",
