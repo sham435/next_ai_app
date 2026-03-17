@@ -1,3 +1,4 @@
+ARG BUILD_DATE
 FROM node:20-alpine AS deps
 WORKDIR /app
 

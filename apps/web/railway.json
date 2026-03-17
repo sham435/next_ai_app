@@ -1,7 +1,8 @@
 {
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "apps/web/Dockerfile"
+    "dockerfilePath": "apps/web/Dockerfile",
+    "rootDirectory": "apps/web"
   },
   "deploy": {
     "startCommand": "npm run start",
