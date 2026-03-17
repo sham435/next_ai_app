@@ -27,7 +27,7 @@ RUN mkdir -p ../node_modules/@scrape-platform/shared-types && \
 WORKDIR /app/apps/web
 
 RUN mkdir -p node_modules/@scrape-platform && \
-    cp -r ../node_modules/@scrape-platform/shared-types ./node_modules/@scrape-platform/ && \
+    cp -r /app/node_modules/@scrape-platform/shared-types ./node_modules/@scrape-platform/ && \
     sed -i 's|"@scrape-platform/shared-types": "\*"|"@scrape-platform/shared-types": "file:./node_modules/@scrape-platform/shared-types"|g' package.json
 
 RUN npm install
