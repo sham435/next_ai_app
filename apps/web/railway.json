@@ -1,13 +1,13 @@
 {
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "apps/web/Dockerfile",
-    "rootDirectory": "apps/web"
+    "dockerfilePath": "apps/web/Dockerfile"
   },
   "deploy": {
     "startCommand": "npm run start",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 60,
-    "restartPolicyType": "ON_FAILURE"
+    "restartPolicyType": "ON_FAILURE",
+    "waitFor": ["CI"]
   }
 }

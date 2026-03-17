@@ -1,10 +1,13 @@
 {
   "build": {
-    "builder": "DOCKERFILE"
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "apps/scraper-service/Dockerfile",
+    "rootDirectory": "apps/scraper-service"
   },
   "deploy": {
     "numReplicas": 1,
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10
+    "restartPolicyMaxRetries": 10,
+    "waitFor": ["CI"]
   }
 }

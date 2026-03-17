@@ -37,6 +37,7 @@ Enterprise-grade web scraping platform built with **Next.js 15**, **NestJS 11**,
 - Docker & Docker Compose
 - PostgreSQL (or use Docker)
 - Redis (or use Docker)
+- npm (not pnpm)
 
 ### Local Development
 
@@ -54,12 +55,28 @@ cp .env.example .env
 # Start all services with Docker
 docker compose up -d
 
+# Run database migrations
+npm run db:migrate
+
 # Or start individually
 npm run dev          # All services (Turborepo)
 npm run dev:web      # Frontend: http://localhost:3000
 npm run dev:api      # API: http://localhost:4000
 npm run dev:worker   # Worker process
 ```
+
+### Available npm Scripts
+
+| Script                | Description                            |
+| --------------------- | -------------------------------------- |
+| `npm run dev`         | Start all services in development mode |
+| `npm run build`       | Build all services                     |
+| `npm run lint`        | Run ESLint on all services             |
+| `npm run lint:fix`    | Fix linting issues                     |
+| `npm run typecheck`   | Run TypeScript type checking           |
+| `npm run test`        | Run tests                              |
+| `npm run db:migrate`  | Run database migrations                |
+| `npm run db:generate` | Generate new migration                 |
 
 ## 📦 Project Structure
 
@@ -103,17 +120,17 @@ next_ai_app/
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | API port | `4000` |
-| `REDIS_HOST` | Redis host | `localhost` |
-| `REDIS_PORT` | Redis port | `6379` |
-| `REDIS_PASSWORD` | Redis password | - |
-| `DATABASE_URL` | PostgreSQL connection string | - |
-| `FRONTEND_URL` | Allowed CORS origin | `http://localhost:3000` |
-| `BULL_BOARD_PASSWORD` | Bull Board dashboard password | - |
-| `WORKER_CONCURRENCY` | Parallel worker jobs | `5` |
-| `REQUEST_TIMEOUT` | HTTP request timeout (ms) | `10000` |
+| Variable              | Description                   | Default                 |
+| --------------------- | ----------------------------- | ----------------------- |
+| `PORT`                | API port                      | `4000`                  |
+| `REDIS_HOST`          | Redis host                    | `localhost`             |
+| `REDIS_PORT`          | Redis port                    | `6379`                  |
+| `REDIS_PASSWORD`      | Redis password                | -                       |
+| `DATABASE_URL`        | PostgreSQL connection string  | -                       |
+| `FRONTEND_URL`        | Allowed CORS origin           | `http://localhost:3000` |
+| `BULL_BOARD_PASSWORD` | Bull Board dashboard password | -                       |
+| `WORKER_CONCURRENCY`  | Parallel worker jobs          | `5`                     |
+| `REQUEST_TIMEOUT`     | HTTP request timeout (ms)     | `10000`                 |
 
 ### Railway Variables
 
@@ -124,15 +141,59 @@ REDIS_HOST=${{Redis.REDIS_HOST}}
 REDIS_PASSWORD=${{Redis.REDIS_PASSWORD}}
 ```
 
+## 🔄 CI/CD Pipeline
+
+This project uses GitHub Actions for CI/CD with automatic Railway deployments.
+
+### Pipeline Flow
+
+```
+Local Commit → GitHub Push → CI Checks → Railway Deploy
+```
+
+### CI Checks (GitHub Actions)
+
+On every push/PR to `main` or `develop`:
+
+1. **Lint & Typecheck** - ESLint + TypeScript validation
+2. **Tests** - Unit tests with Redis service
+3. **Build** - Build all Node.js services
+4. **Security Scan** - npm audit + Trivy vulnerability scan
+
+### Railway Deployment
+
+- **Automatic**: Pushes to `main` trigger Railway deployments
+- **Wait for CI**: Each service waits for CI to pass before deploying
+- **Root Directory**: Each service is built from its respective `apps/*` folder
+- **Pre-deploy**: Database migrations run automatically before API deployment
+
+### Environment Variables
+
+Railway automatically injects:
+
+```bash
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+REDIS_HOST=${{Redis.REDIS_HOST}}
+REDIS_PASSWORD=${{Redis.REDIS_PASSWORD}}
+```
+
+### Rollback
+
+Railway supports instant rollbacks via the dashboard or CLI:
+
+```bash
+railway rollback
+```
+
 ## 📡 API Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Health check |
-| GET | `/metrics` | Prometheus metrics |
-| POST | `/scrape` | Submit scrape job |
-| WS | `/scrape` | WebSocket for real-time progress |
-| GET | `/admin/queues` | Bull Board dashboard |
+| Method | Path            | Description                      |
+| ------ | --------------- | -------------------------------- |
+| GET    | `/health`       | Health check                     |
+| GET    | `/metrics`      | Prometheus metrics               |
+| POST   | `/scrape`       | Submit scrape job                |
+| WS     | `/scrape`       | WebSocket for real-time progress |
+| GET    | `/admin/queues` | Bull Board dashboard             |
 
 ### POST /scrape
 
@@ -143,6 +204,7 @@ curl -X POST http://localhost:4000/scrape \
 ```
 
 Response:
+
 ```json
 {
   "success": true,

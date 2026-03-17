@@ -1,11 +1,13 @@
 {
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "apps/api/Dockerfile"
+    "dockerfilePath": "apps/api/Dockerfile",
+    "rootDirectory": "apps/api"
   },
   "deploy": {
     "healthcheckPath": "/health",
     "healthcheckTimeout": 30,
-    "startCommand": "node dist/main.js"
+    "startCommand": "node dist/main.js",
+    "waitFor": ["CI"]
   }
 }
