@@ -1,7 +1,7 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/shared-types/tsconfig.json ./packages/shared-types/
 COPY tsconfig.base.json ./
@@ -13,7 +13,7 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 COPY packages/shared-types/package.json ./packages/shared-types/
 COPY packages/shared-types/tsconfig.json ./packages/shared-types/
 COPY packages/shared-types/src ./packages/shared-types/src
@@ -27,18 +27,16 @@ RUN mkdir -p ../node_modules/@scrape-platform/shared-types && \
     cp ./package.json ../node_modules/@scrape-platform/shared-types/
 
 WORKDIR /app
-COPY apps/web/package.json ./apps/web/
-COPY apps/web/package-lock.json ./apps/web/
-RUN cd apps/web && npm install
+COPY package.json ./
+RUN npm install
 
-COPY apps/web/src ./apps/web/src
-COPY apps/web/public ./apps/web/public
-COPY apps/web/next.config.* ./apps/web/
-COPY apps/web/tsconfig.json ./apps/web/
-COPY apps/web/tailwind.config.* ./apps/web/
-COPY apps/web/postcss.config.* ./apps/web/
+COPY src ./src
+COPY public ./public
+COPY next.config.* ./
+COPY tsconfig.json ./
+COPY tailwind.config.* ./
+COPY postcss.config.* ./
 
-WORKDIR /app/apps/web
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -49,11 +47,11 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
-COPY --from=builder /app/apps/web/.next ./.next
-COPY --from=builder /app/apps/web/public ./public
-COPY --from=builder /app/apps/web/package.json ./package.json
-COPY --from=builder /app/apps/web/.next/static ./.next/static
-COPY --from=builder /app/apps/web/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/node_modules ./node_modules
 
 USER nodejs
 

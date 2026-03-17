@@ -1,5 +1,5 @@
 # Python scraper service
-# v2 - updated build context
+FROM python:3.11-slim
 
 # Install system dependencies including Chrome
 RUN apt-get update && apt-get install -y \
