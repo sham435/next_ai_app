@@ -1,18 +1,9 @@
-# Worker Service Dockerfile
-ARG CACHE_DATE
-ENV CACHE_DATE=$CACHE_DATE
-
-FROM node:20-alpine AS deps
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY apps/worker/package*.json ./
 RUN npm install
 
-FROM node:20-alpine AS builder
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY apps/worker/package*.json ./
 COPY apps/worker/tsconfig*.json ./
 COPY apps/worker/src ./src
 
@@ -30,12 +21,11 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nodejs
-
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nodejs
 
 USER nodejs
 
