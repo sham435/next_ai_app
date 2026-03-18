@@ -29,4 +29,4 @@ RUN adduser --system --uid 1001 nodejs
 
 USER nodejs
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/index.js"]
