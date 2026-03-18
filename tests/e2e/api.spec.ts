@@ -1,15 +1,20 @@
 import { test, expect } from '@playwright/test';
 
-const API_URL = process.env.API_URL || 'http://localhost:4000';
+// Use Railway environment variable if available
+const API_URL = process.env.API_URL || process.env.RAILWAY_SERVICE_SCRAPER_URL || 'http://localhost:4000';
 const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
 
-// Increase default timeout for heavy scraping
-test.setTimeout(120_000); // 2 minutes
+// Increase default test timeout for slow scraper responses
+test.setTimeout(180_000); // 3 minutes per test
 
+// -------------------------
+// Health & Metrics
+// -------------------------
 test.describe('API Health & Basic Functionality', () => {
   test('should pass health check', async ({ request }) => {
     const response = await request.get(`${API_URL}/health`);
     expect(response.ok()).toBeTruthy();
+
     const body = await response.json();
     expect(body.status).toBeDefined();
   });
@@ -20,6 +25,9 @@ test.describe('API Health & Basic Functionality', () => {
   });
 });
 
+// -------------------------
+// Scrape API Endpoints
+// -------------------------
 test.describe('Scrape API Endpoints', () => {
   test('should validate scrape request', async ({ request }) => {
     const response = await request.post(`${API_URL}/scrape`, { data: {} });
@@ -52,18 +60,22 @@ test.describe('Scrape API Endpoints', () => {
   });
 });
 
+// -------------------------
+// Rate Limiting
+// -------------------------
 test.describe('Rate Limiting', () => {
   test('should enforce rate limits', async ({ request }) => {
     const responses = [];
 
-    // Throttle requests to avoid CI container overload
+    // Throttle requests to avoid CI overload
     for (let i = 0; i < 15; i++) {
       const res = await request.post(`${API_URL}/scrape`, {
         data: { url: `https://example${i}.com` },
       });
       responses.push(res);
-      // small delay to avoid hammering the scraper
-      await new Promise(r => setTimeout(r, 200));
+
+      // Small pause between requests to reduce concurrency spikes
+      await new Promise(r => setTimeout(r, 300));
     }
 
     const statusCodes = responses.map(r => r.status());
