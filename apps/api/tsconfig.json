@@ -1,5 +1,4 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
@@ -12,7 +11,13 @@
     "declaration": false,
     "declarationMap": false,
     "sourceMap": true,
-    "incremental": true
+    "incremental": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
