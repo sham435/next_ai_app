@@ -13,6 +13,7 @@ COPY apps/web/src ./src
 COPY apps/web/public ./public
 COPY apps/web/next.config.ts ./
 COPY apps/web/tsconfig.json ./
+COPY tsconfig.base.json ./
 COPY apps/web/postcss.config.mjs ./
 
 RUN npm run build
