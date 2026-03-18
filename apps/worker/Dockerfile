@@ -1,19 +1,18 @@
 # Worker Service Dockerfile
-# Uses Root Directory: apps/worker in Railway
 
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-COPY package*.json ./
+COPY apps/worker/package*.json ./
 RUN npm install
 
 FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY package*.json ./
-COPY tsconfig*.json ./
-COPY src ./src
+COPY apps/worker/package*.json ./
+COPY apps/worker/tsconfig*.json ./
+COPY apps/worker/src ./src
 
 RUN npx tsc
 
@@ -38,4 +37,4 @@ COPY --from=builder /app/node_modules ./node_modules
 
 USER nodejs
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/main.js"]

@@ -1,11 +1,11 @@
 {
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile",
-    "rootDirectory": "apps/worker"
+    "dockerfilePath": "apps/worker/Dockerfile",
+    "rootDirectory": "."
   },
   "deploy": {
-    "startCommand": "node /app/apps/worker/dist/main.js",
-    "waitFor": ["CI"]
+    "startCommand": "node dist/main.js",
+    "restartPolicyType": "ON_FAILURE"
   }
 }
