@@ -1,10 +1,11 @@
 {
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile"
+    "dockerfilePath": "apps/web/Dockerfile",
+    "rootDirectory": "."
   },
   "deploy": {
-    "startCommand": "npm run start --workspace=web",
+    "startCommand": "node server.js",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 60,
     "restartPolicyType": "ON_FAILURE"

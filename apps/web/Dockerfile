@@ -1,34 +1,11 @@
-ARG BUILD_DATE
-FROM node:20-alpine AS deps
-WORKDIR /app
-
-COPY package.json ./
-COPY apps/web/package.json ./apps/web/
-COPY packages/shared-types/package.json ./packages/shared-types/
-COPY tsconfig.base.json ./
-
-RUN npm install
-
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 
-COPY apps/web ./apps/web
-COPY packages/shared-types ./packages/shared-types
-COPY tsconfig.base.json ./
+COPY apps/web/package.json ./package.json
+COPY packages/shared-types/package.json ./shared-types/package.json
+COPY packages/shared-types/src ./shared-types/src
 
-WORKDIR /app/packages/shared-types
-RUN npx tsc
-
-RUN mkdir -p ../node_modules/@scrape-platform/shared-types && \
-    cp -r ./dist/* ../node_modules/@scrape-platform/shared-types/ && \
-    cp ./package.json ../node_modules/@scrape-platform/shared-types/
-
-WORKDIR /app/apps/web
-
-RUN mkdir -p node_modules/@scrape-platform && \
-    cp -r /app/node_modules/@scrape-platform/shared-types ./node_modules/@scrape-platform/ && \
-    sed -i 's|"@scrape-platform/shared-types": "\*"|"@scrape-platform/shared-types": "file:./node_modules/@scrape-platform/shared-types"|g' package.json
+RUN sed -i 's|"@scrape-platform/shared-types": "\*"|"@scrape-platform/shared-types": "file:./shared-types"|g' package.json
 
 RUN npm install
 
@@ -36,26 +13,24 @@ COPY apps/web/src ./src
 COPY apps/web/public ./public
 COPY apps/web/next.config.ts ./
 COPY apps/web/tsconfig.json ./
-COPY apps/web/tailwind.config.* ./
-COPY apps/web/postcss.config.* ./
+COPY apps/web/postcss.config.mjs ./
 
 RUN npm run build
 
 FROM node:20-alpine AS runner
-WORKDIR /app/apps/web
+WORKDIR /app
 
 ENV NODE_ENV=production
+ENV PORT=3000
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
-COPY --from=builder /app/apps/web/.next ./.next
-COPY --from=builder /app/apps/web/public ./public
-COPY --from=builder /app/apps/web/package.json ./package.json
-COPY --from=builder /app/apps/web/.next/static ./.next/static
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
 USER nodejs
 
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+CMD ["node", "server.js"]

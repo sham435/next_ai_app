@@ -30,6 +30,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_BROWSER_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 ENV NODE_ENV=production
+ENV PORT=4000
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
@@ -42,5 +43,5 @@ RUN mkdir -p /app/download && chown -R nodejs:nodejs /app/download
 
 USER nodejs
 
-EXPOSE 3001
+EXPOSE 4000
 CMD ["node", "dist/main.js"]
