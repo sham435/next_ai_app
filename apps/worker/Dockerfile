@@ -1,4 +1,6 @@
 # Worker Service Dockerfile
+ARG CACHE_DATE
+ENV CACHE_DATE=$CACHE_DATE
 
 FROM node:20-alpine AS deps
 WORKDIR /app
