@@ -1,5 +1,5 @@
-import { AppDataSource } from '../data-source';
-import { ScrapeJob } from '../entities/scrape-job.entity';
+import { AppDataSource } from "../data-source";
+import { ScrapeJob, ScrapeStatus } from "../entities/scrape-job.entity";
 
 async function seed() {
   await AppDataSource.initialize();
@@ -9,8 +9,8 @@ async function seed() {
   // Seed sample jobs for development
   const sampleJobs = [
     {
-      url: 'https://example.com',
-      status: 'completed',
+      url: "https://example.com",
+      status: ScrapeStatus.COMPLETED,
       priority: 1,
       filesFound: 10,
       filesDownloaded: 8,
@@ -18,15 +18,15 @@ async function seed() {
       completedAt: new Date(),
     },
     {
-      url: 'https://example.org',
-      status: 'processing',
+      url: "https://example.org",
+      status: ScrapeStatus.FETCHING,
       priority: 2,
       filesFound: 5,
       startedAt: new Date(),
     },
     {
-      url: 'https://example.net',
-      status: 'pending',
+      url: "https://example.net",
+      status: ScrapeStatus.PENDING,
       priority: 1,
     },
   ];
@@ -40,7 +40,7 @@ async function seed() {
     }
   }
 
-  console.log('Seeding completed');
+  console.log("Seeding completed");
   await AppDataSource.destroy();
 }
 
