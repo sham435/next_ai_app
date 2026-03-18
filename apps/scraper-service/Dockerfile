@@ -1,8 +1,5 @@
 FROM python:3.11-slim
 
-ARG CACHE_DATE=2024-01-01
-ENV CACHE_DATE=$CACHE_DATE
-
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
@@ -36,12 +33,12 @@ ENV CHROME_BIN=/usr/bin/google-chrome-stable \
     PUPPETEER_CACHE_DIR=/app/.cache/puppeteer \
     PORT=8000
 
-COPY apps/scraper-service/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir "playwright>=1.49.0"
 RUN pip install --no-cache-dir -r requirements.txt
 RUN playwright install chromium --with-deps
 
-COPY apps/scraper-service/ .
+COPY . .
 
 EXPOSE 8000
 
