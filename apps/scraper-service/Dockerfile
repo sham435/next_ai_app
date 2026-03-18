@@ -33,12 +33,12 @@ ENV CHROME_BIN=/usr/bin/google-chrome-stable \
     PUPPETEER_CACHE_DIR=/app/.cache/puppeteer \
     PORT=8000
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir "playwright>=1.49.0"
+COPY apps/scraper-service/requirements.txt .
+RUN pip install --no-cache-dir playwright>=1.49.0
 RUN pip install --no-cache-dir -r requirements.txt
 RUN playwright install chromium --with-deps
 
-COPY . .
+COPY apps/scraper-service/ .
 
 EXPOSE 8000
 

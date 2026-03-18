@@ -1,8 +1,8 @@
 {
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile",
-    "rootDirectory": "apps/scraper-service"
+    "dockerfilePath": "apps/scraper-service/Dockerfile",
+    "rootDirectory": "."
   },
   "deploy": {
     "numReplicas": 1,
