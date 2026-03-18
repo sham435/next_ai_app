@@ -1,11 +1,10 @@
-# Python scraper service
-# Force rebuild: invalidate cache
-ARG CACHE_DATE
-ENV CACHE_DATE=$CACHE_DATE
-
 FROM python:3.11-slim
 
-# Install system dependencies including Chrome
+ARG CACHE_DATE=2024-01-01
+ENV CACHE_DATE=$CACHE_DATE
+
+WORKDIR /app
+
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -27,19 +26,15 @@ RUN apt-get update && apt-get install -y \
     && apt-get install -y google-chrome-stable --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Install ChromeDriver - use fixed version matching installed Chrome
 RUN wget -q -O /tmp/chromedriver.zip "https://storage.googleapis.com/chrome-for-testing-public/146.0.7680.80/linux64/chromedriver-linux64.zip" && \
     unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
     rm /tmp/chromedriver.zip
 
-# Set environment variables for Chrome
 ENV CHROME_BIN=/usr/bin/google-chrome-stable \
     CHROMEDRIVER_PATH=/usr/local/bin/chromedriver \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable \
     PUPPETEER_CACHE_DIR=/app/.cache/puppeteer \
     PORT=8000
-
-WORKDIR /app
 
 COPY apps/scraper-service/requirements.txt .
 RUN pip install --no-cache-dir "playwright>=1.49.0"
