@@ -12,9 +12,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
-    if (PUBLIC_ROUTES.includes(request.path)) {
-      return true;
-    }
+    if (request.path.startsWith('/socket.io')) return true;
+    if (PUBLIC_ROUTES.includes(request.path)) return true;
     return super.canActivate(context);
   }
 
