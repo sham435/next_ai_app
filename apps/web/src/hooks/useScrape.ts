@@ -10,17 +10,7 @@ import type {
   ScrapeMethod,
 } from '@scrape-platform/shared-types';
 
-const getApiUrl = () => {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      return process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//api.railway.internal`;
-    }
-  }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-};
-
-const API_URL = getApiUrl();
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api-production-171d.up.railway.app';
 
 export type ScrapeStatus = 'idle' | 'connecting' | 'scraping' | 'complete' | 'error';
 
