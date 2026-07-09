@@ -26,7 +26,7 @@
     "@nestjs/throttler": "^6.0.0",
     "@nestjs/websockets": "^11.0.0",
     "@scrape-platform/shared-types": "file:./src/shared-types",
-    "@sparticuz/chromium-min": "126.0.0",
+    "@sparticuz/chromium-min": "149.0.0",
     "axios": "^1.7.0",
     "bcrypt": "6.0.0",
     "bullmq": "^5.0.0",
