@@ -14,7 +14,10 @@ import type { ScrapeResponse, ScrapeMethod } from '@scrape-platform/shared-types
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL?.split(',') ?? ['http://localhost:3000', 'https://web-production-b5dcf.up.railway.app'],
+    origin: (process.env.FRONTEND_URL || process.env.RAILWAY_SERVICE_WEB_URL)?.split(',') ?? [
+      'http://localhost:3000',
+      'https://web-production-b5dcf.up.railway.app',
+    ],
     credentials: true,
   },
   transports: ['polling', 'websocket'],

@@ -1,4 +1,4 @@
-import { Worker, Queue, QueueEvents, ConnectionOptions } from 'bullmq';
+import { Worker, QueueEvents, ConnectionOptions } from 'bullmq';
 import Redis from 'ioredis';
 import { processJob } from './processor';
 import { logger } from './logger';

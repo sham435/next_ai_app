@@ -1,5 +1,13 @@
 # 🕷️ Scrape Platform
 
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff)
+![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=fff)
+![Next.js](https://img.shields.io/badge/Next.js-000?logo=next.js&logoColor=fff)
+![Node](https://img.shields.io/badge/Node-20-339933?logo=node.js&logoColor=fff)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=fff)
+[![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![CI](https://github.com/sham435/next_ai_app/actions/workflows/ci.yml/badge.svg)](https://github.com/sham435/next_ai_app/actions/workflows/ci.yml)
+
 Enterprise-grade web scraping platform built with **Next.js 15**, **NestJS 11**, **BullMQ**, **Redis**, and **PostgreSQL**.
 
 ## ✨ Features
@@ -187,26 +195,38 @@ railway rollback
 
 ## 📡 API Endpoints
 
-| Method | Path            | Description                      |
-| ------ | --------------- | -------------------------------- |
-| GET    | `/health`       | Health check                     |
-| GET    | `/metrics`      | Prometheus metrics               |
-| POST   | `/scrape`       | Submit scrape job                |
-| WS     | `/scrape`       | WebSocket for real-time progress |
-| GET    | `/admin/queues` | Bull Board dashboard             |
+| Method | Path               | Description                      | Auth     |
+| ------ | ------------------ | -------------------------------- | -------- |
+| GET    | `/health`          | Health check                     | Public   |
+| GET    | `/metrics`         | Prometheus metrics               | Public   |
+| POST   | `/auth/login`      | Get JWT token (via API key)      | Public   |
+| POST   | `/scrape`          | Submit scrape job                | JWT      |
+| GET    | `/scrape/jobs`     | List recent scrape jobs          | JWT      |
+| GET    | `/scrape/jobs/:id` | Get job details                  | JWT      |
+| POST   | `/scrape/download` | Download scraped resources as ZIP| JWT      |
+| WS     | `/scrape`          | WebSocket for real-time progress | JWT      |
+| GET    | `/admin/queues`    | Bull Board dashboard             | Basic    |
 
-### POST /scrape
+### Authentication
 
 ```bash
+# Generate an API key
+node scripts/generate-api-key.mjs myname admin
+
+# Set API_KEYS in Railway env or .env
+# API_KEYS=skp_abc123:myname:admin
+
+# Get a JWT token
+curl -X POST http://localhost:4000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"apiKey": "skp_abc123"}'
+
+# Use the token for protected endpoints
 curl -X POST http://localhost:4000/scrape \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
   -d '{"url": "https://example.com"}'
 ```
-
-Response:
-
-```json
-{
   "success": true,
   "jobId": "abc-123"
 }
@@ -287,4 +307,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ## 📝 License
 
-Private — All rights reserved.
+MIT — see [LICENSE](LICENSE) for details.

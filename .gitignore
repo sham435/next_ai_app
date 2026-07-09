@@ -13,6 +13,7 @@ build/
 .env
 .env.local
 .env.*.local
+.env.test
 
 # IDE
 .vscode/
@@ -41,3 +42,8 @@ coverage/
 
 # Docker
 docker-compose.override.yml
+verify_services.py
+session-*.md
+test-results/
+playwright-report/
+*.tsbuildinfo
