@@ -3,6 +3,8 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
+
+declare const module: any;
 import basicAuth from 'express-basic-auth';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
@@ -78,6 +80,11 @@ async function bootstrap() {
   
   if (process.env.NODE_ENV === 'production') {
     logger.log(`🔒 Production mode - security features enabled`);
+  }
+
+  if (module.hot) {
+    module.hot.accept();
+    module.hot.dispose(() => app.close());
   }
 }
 
