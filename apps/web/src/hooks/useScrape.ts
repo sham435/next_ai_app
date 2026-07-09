@@ -14,8 +14,7 @@ const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
     if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      const protocol = window.location.protocol;
-      return `${protocol}//api-production-171d.up.railway.app`;
+      return process.env.NEXT_PUBLIC_API_URL || `${window.location.protocol}//api.railway.internal`;
     }
   }
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';

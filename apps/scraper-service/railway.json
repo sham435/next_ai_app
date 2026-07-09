@@ -1,8 +1,8 @@
 {
+  "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "apps/scraper-service/Dockerfile",
-    "rootDirectory": "."
+    "dockerfilePath": "Dockerfile"
   },
   "deploy": {
     "numReplicas": 1,

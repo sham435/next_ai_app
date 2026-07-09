@@ -1,0 +1,37 @@
+name: Cleanup Old Workflow Runs
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup CI Pipeline
+        uses: actions/delete-old-workflow-runs@v1
+        with:
+          workflow_names: CI Pipeline
+          keep_minimum_runs: 20
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup Test Suite
+        uses: actions/delete-old-workflow-runs@v1
+        with:
+          workflow_names: Test Suite
+          keep_minimum_runs: 20
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup Deploy workflows
+        uses: actions/delete-old-workflow-runs@v1
+        with:
+          workflow_names: Deploy to Production, Deploy to Railway, Deploy to Staging
+          keep_minimum_runs: 15
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup Security Scan
+        uses: actions/delete-old-workflow-runs@v1
+        with:
+          workflow_names: Weekly Security Scan
+          keep_minimum_runs: 8
+          token: ${{ secrets.GITHUB_TOKEN }}
