@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@bull-board/api": "^6.0.0",
-    "@bull-board/express": "^6.0.0",
+    "@bull-board/express": "^8.1.2",
     "@bull-board/nestjs": "^6.0.0",
     "@nestjs/bullmq": "^11.0.0",
     "@nestjs/common": "^11.0.0",
