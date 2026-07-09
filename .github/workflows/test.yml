@@ -80,6 +80,8 @@ jobs:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
           REDIS_HOST: localhost
           REDIS_PORT: 6379
+          API_KEYS: skp_test:ci:admin
+          JWT_SECRET: ci-test-jwt-secret
       
       - name: Start Web
         run: |
