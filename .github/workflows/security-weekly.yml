@@ -35,7 +35,7 @@ jobs:
           output: trivy-fs-report.json
 
       - name: Upload scan results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: security-scan-results
           path: trivy-fs-report.json
