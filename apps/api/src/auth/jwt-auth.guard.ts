@@ -2,7 +2,7 @@ import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/com
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 
-const PUBLIC_ROUTES = ['/health', '/metrics', '/auth/login'];
+const PUBLIC_ROUTES = ['/health', '/metrics', '/auth/login', '/scrape/download'];
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {

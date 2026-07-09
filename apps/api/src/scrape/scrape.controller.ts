@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Logger, Get, Param, Res, Req, Query } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Logger, Get, Param, Res, Query } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { ScrapeService } from './scrape.service';
 import { ScrapeDto } from './dto/scrape.dto';
@@ -70,7 +70,7 @@ export class ScrapeController {
   }
 
   @Post('download')
-  async downloadAndZip(@Body() body: { url: string }, @Req() req: Request, @Res() res: Response) {
+  async downloadAndZip(@Body() body: { url: string }, @Res() res: any) {
     try {
       const response = await fetch(`${SCRAPER_URL()}/scrape-and-zip`, {
         method: 'POST',
@@ -80,14 +80,13 @@ export class ScrapeController {
       if (!response.ok) {
         return res.status(500).json({ error: 'Failed to create download' });
       }
+      const buffer = Buffer.from(await response.arrayBuffer());
       res.set({
         'Content-Type': 'application/zip',
         'Content-Disposition': response.headers.get('Content-Disposition') || 'attachment; filename=scraped.zip',
+        'Content-Length': buffer.length,
       });
-      response.body?.pipeTo(new WritableStream({
-        write(chunk: any) { res.write(chunk); },
-        close() { res.end(); },
-      }));
+      res.end(buffer);
     } catch (error) {
       this.logger.error('Download error:', error);
       res.status(500).json({ error: 'Failed to create download' });
