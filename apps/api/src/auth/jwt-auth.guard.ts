@@ -2,7 +2,7 @@ import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/com
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 
-const PUBLIC_ROUTES = ['/health', '/metrics', '/auth/login', '/scrape/download'];
+const PUBLIC_ROUTES = ['/health', '/metrics', '/auth/login', '/scrape/download', '/socket.io'];
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -12,9 +12,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
-    if (PUBLIC_ROUTES.includes(request.path)) {
-      return true;
-    }
+    if (request.path.startsWith('/socket.io')) return true;
+    if (PUBLIC_ROUTES.includes(request.path)) return true;
     return super.canActivate(context);
   }
 
