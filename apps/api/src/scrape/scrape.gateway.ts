@@ -82,6 +82,14 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.debug(`Client disconnected: ${client.id}`);
   }
 
+  emitProgress(jobId: string, progress: number, stage: string, message?: string) {
+    this.server.emit(`progress:${jobId}`, { jobId, progress, stage, message });
+  }
+
+  emitComplete(jobId: string, result: Record<string, unknown>) {
+    this.server.emit(`complete:${jobId}`, result);
+  }
+
   @SubscribeMessage('startScrape')
   async handleScrape(
     @MessageBody() data: { url: string; method?: ScrapeMethod },
